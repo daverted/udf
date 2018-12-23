@@ -1,0 +1,24 @@
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'maven'
+	apply plugin: 'eclipse'
+	
+	group = 'com.example'
+	version = '1.0.1'
+	
+	repositories {
+		mavenCentral()
+		mavenLocal()
+	}
+	task javadocJar(type: Jar) {
+			classifier = 'javadoc'
+			from javadoc
+	}
+	task sourcesJar(type: Jar) {
+			classifier = 'sources'
+			from sourceSets.main.allSource
+	}
+	artifacts {
+			archives javadocJar, sourcesJar
+	}
+}

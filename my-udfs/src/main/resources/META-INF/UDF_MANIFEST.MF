@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<udf_manifest>
+  <version>1.0.1</version>
+  <library_name>my-udfs</library_name>
+  <backwards_compatible>true</backwards_compatible>
+  <functions>
+    <function>
+      <function_type>ANOMALY</function_type>
+      <function_name>Force Snapshot</function_name>
+      <description>
+        Force a snapshot the next time an event occurs for every event that's occurred in the last 5 minutes.
+      </description>
+      <param_type>TEXT</param_type>
+      <class_file>com.example.udf.snapshot.ForceSnapshotFunction</class_file>
+      <default_params>
+        # This function has no parameters.
+      </default_params>
+      <admin_function>true</admin_function>
+    </function>
+  </functions>
+</udf_manifest>

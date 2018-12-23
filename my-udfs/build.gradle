@@ -1,0 +1,65 @@
+apply plugin: 'eu.appsatori.fatjar'
+
+archivesBaseName = 'my-udfs'
+
+buildscript {
+  repositories {
+    jcenter()
+    mavenLocal()
+  }
+
+  dependencies {
+    classpath 'eu.appsatori:gradle-fatjar-plugin:0.3'
+  }
+}
+
+dependencies {
+  compile (
+    "org.apache.commons:commons-lang3:3.7",
+    "com.takipi:api-client:2.9.2",
+    "com.takipi:api-client-util:2.9.2",
+    "com.takipi:overops-functions:2.0.0"
+  )
+}
+
+fatJar {
+  exclude 'META-INF/maven'
+  exclude 'META-INF/*.example'
+  manifest {
+    attributes 'Main-Class': 'MyUDFs'
+  }
+}
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      pom.project {
+        name 'my-udfs'
+        description 'My User Defined Functions extending OverOps'
+        
+        licenses {
+          license {
+            name 'MIT License'
+            url 'http://www.opensource.org/licenses/mit-license.php'
+          }
+        }
+
+        scm {
+          connection 'scm:git:https://github.com/takipi-field/udf/tree/master/my-udfs'
+          developerConnection 'scm:git:https://github.com/takipi-field/udf/tree/master/my-udfs'
+          url 'https://github.com/takipi-field/udf/tree/master/my-udfs'
+        }
+      }
+    }
+  }
+}
+
+task copyJar(dependsOn: fatJar) {
+  doLast {
+    if (rootProject.hasProperty("jarTargetFile")) {
+      println "Copying $jar.archivePath to $jarTargetFile"
+
+      ant.copy(file:jar.archivePath, tofile:jarTargetFile)
+    }
+  }
+}
