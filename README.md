@@ -36,11 +36,11 @@ The API Client is divided into two projects: the API Client itself, and a set of
 Let's look at the [list categories](https://doc.overops.com/reference#get_services-env-id-categories) API.
 
 ```java
-// ask for a new Builder
+// create a new Builder
 ApiClient client = ApiClient.newBuilder().setHostname("http://localhost:8080");
 ```
 
-When writing a UDF, we suggest leveraging ContextArgs, which sets hostname and API key from the context and makes the API Client available.
+When writing a UDF, we suggest leveraging [ContextArgs](https://github.com/takipi/overops-functions/blob/master/overops-functions/src/main/java/com/takipi/udf/ContextArgs.java), which sets hostname and API key from the context and makes the API Client available.
 
 ```java
 // from ContextArgs in a UDF
@@ -64,9 +64,11 @@ response.isBadResponse(); // helper utilities
 CategoriesResult data = response.data;
 ```
 
+Explore the [OverOps UDF library](https://github.com/takipi/overops-functions/) for more examples on how to use the API Client.
+
 ## Getting Started
 
-For convenience, we're using Eclipse and Gradle with [the Gradle Eclipse plugin](https://docs.gradle.org/4.9/userguide/eclipse_plugin.html).
+For convenience, we're using Eclipse and Gradle with the [Gradle Eclipse plugin](https://docs.gradle.org/4.9/userguide/eclipse_plugin.html).
 
 [Fork this project](https://help.github.com/articles/fork-a-repo/), then configure Eclipse:
 
@@ -81,7 +83,7 @@ Now [import the project into Eclipse](https://www.eclipse.org/community/eclipse_
 
 ![project tree](readme/tree.png "Project structure in Eclipse")
 
-This project contains two example functions that can be added to any view: Hello World and Force Snapshot. Hello World is identical to apply-label, which applies a label to each new event. Force Snapshot runs periodically, calling [force snapshot](https://doc.overops.com/v4.28/reference#post_services-env-id-events-event-id-force-snapshot) for every event that has occurred in the last 5 minutes.
+This project contains two example functions that can be added to any view: [Hello World](https://github.com/daverted/udf/blob/master/my-udfs/src/main/java/com/example/udf/helloworld/HelloWorldFunction.java) and [Force Snapshot](https://github.com/daverted/udf/blob/master/my-udfs/src/main/java/com/example/udf/snapshot/ForceSnapshotFunction.java). Hello World is identical to [apply-label](https://github.com/takipi/overops-functions/blob/master/overops-functions/src/main/java/com/takipi/udf/label/ApplyLabelFunction.java), which applies a label to each new event. Force Snapshot runs periodically, calling [force snapshot](https://doc.overops.com/v4.28/reference#post_services-env-id-events-event-id-force-snapshot) for every event that has occurred in the last 5 minutes.
 
 ## Required Methods
 
@@ -93,7 +95,7 @@ The `validateInput` method takes a the string `rawInput`, representing parameter
 
 ```java
 public static String validateInput(String rawInput) {
-    return "Valid String"; // why is this a string?
+    return "Valid String";
 }
 ```
 
@@ -146,7 +148,6 @@ static class PeriodicAvgTimerInput extends Input {
         return builder.toString();
     }
 
-    // what does this do?
     static PeriodicAvgTimerInput of(String raw) {
         return new PeriodicAvgTimerInput(raw);
     }
@@ -221,9 +222,8 @@ To test a UDF locally, simply create a `main` method and run it as you would a r
 public static void main(String[] args) {
 
     // pass API Host, Key, and Service ID as command line arguments
-    if ((args == null) || (args.length < 3)) {
+    if ((args == null) || (args.length < 3))
         throw new IllegalArgumentException("java MyFunction API_URL API_KEY SERVICE_ID");
-    }
 
     ContextArgs contextArgs = new ContextArgs();
 
@@ -278,7 +278,7 @@ public static void main(String[] args) {
 
 ## Building
 
-This project depends on overops-functions. First, check out the [overops-functions project](https://github.com/takipi/overops-functions/), then build and install the project locally with:
+This project depends on [overops-functions](https://github.com/takipi/overops-functions/). First, check out the [overops-functions project](https://github.com/takipi/overops-functions/), then build and install the project locally with:
 
 ```console
 ./gradlew :overops-functions:install
