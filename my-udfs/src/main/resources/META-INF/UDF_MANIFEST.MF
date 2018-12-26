@@ -8,7 +8,7 @@
       <function_type>ANOMALY</function_type>
       <function_name>Force Snapshot</function_name>
       <description>
-        Force a snapshot the next time an event occurs for every event that's occurred in the last 5 minutes.
+        Force a snapshot the next time an event occurs for every event that has occurred in the last 5 minutes.
       </description>
       <param_type>TEXT</param_type>
       <class_file>com.example.udf.snapshot.ForceSnapshotFunction</class_file>
