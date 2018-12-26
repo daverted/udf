@@ -2,7 +2,7 @@
 
 User Defined Functions (UDF) are a simple, flexible mechanism for users to add custom functionality to OverOps. To learn more about UDFs, see: [User Defined Functions (UDF)](https://doc.overops.com/docs/managing-and-creating-alerts#section-user-defined-functions-udf-).
 
-OverOps maintains an [open source UDF library](https://github.com/takipi/overops-functions/) which are automatically enabled for all users.
+OverOps maintains an [open source UDF library](https://github.com/takipi/overops-functions/) which  is automatically enabled for all users.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ The UDF is executed in a secured environment, independent of our backend. For Sa
 
 ## API Client
 
-Since UDFs were designed to be simple and flexible, they're more useful when combined with the OverOps API Client. The [API Client](https://github.com/takipi/api-client) is a simple tool for interacting with the OverOps [public API](https://doc.overops.com/reference) in Java.
+Since UDFs were designed to be simple and flexible, they're more useful when combined with the OverOps [API Client](https://github.com/takipi/api-client). The API Client is a simple tool for interacting with the OverOps [public API](https://doc.overops.com/reference) in Java.
 
 The API Client is divided into two projects: the API Client itself, and a set of utility functions. The API Client provides methods for get, put, post, and delete rest operations, as well as POJOs that represent request and result objects for each operation available through the public API. Utility functions wrap commonly used operation sets into a single function.
 
@@ -93,7 +93,7 @@ Every UDF must have two methods: `validateInput` and `execute`.
 
 ### `validateInput`
 
-The `validateInput` method takes a the string `rawInput`, representing parameters, and returns a string if the parameters are valid:
+The `validateInput` method takes a the string `rawInput`, representing parameters, and returns a string if the parameters are valid. For anomaly functions, this valid string is displayed in the UI.
 
 ```java
 public static String validateInput(String rawInput) {
