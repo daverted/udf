@@ -378,7 +378,7 @@ The `functions` field contains individual `function` entries for each UDF in you
 
 ## Deleting UDFs
 
-To delete a custom UDF library, you'll need to make two API calls. Fist, get the library ID, then delete the library by ID. *These API methods are not implemented in the API Client. You'll need to call them with `curl` or a tool like [Postman](https://www.getpostman.com/).*
+To delete a custom UDF library, you'll need to make two API calls. First, get the library ID, then delete the library by ID. *These API methods are not implemented in the API Client. You'll need to call them with `curl` or a tool like [Postman](https://www.getpostman.com/).*
 
 [List UDF libraries](https://doc.overops.com/v4.28/reference#get_services-env-id-udfs):
 
