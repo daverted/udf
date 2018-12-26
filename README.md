@@ -5,6 +5,7 @@ User Defined Functions (UDF) are a simple, flexible mechanism for users to add c
 OverOps maintains an [open source UDF library](https://github.com/takipi/overops-functions/) which are automatically enabled for all users.
 
 ## Table of Contents
+
 [Background](#background)  
 [API Client](#api-client)  
 [Getting Started](#getting-started)  
@@ -21,11 +22,9 @@ OverOps maintains an [open source UDF library](https://github.com/takipi/overops
 
 This repository contains examples which can be used as a starting point for making custom UDFs that can be uploaded to OverOps as a jar file.
 
-A UDF can be triggered by new events or periodically every 5, 10,  15, 30 or 60 minutes. Upon upload, the jar file is validated and a slim wrapper is injected.
+A UDF can be triggered by new events or periodically every 5, 10, 15, 30 or 60 minutes. Upon upload, the jar file is validated and a slim wrapper is injected.
 
 The UDF is executed in a secured environment, independent of our backend. For SaaS, AWS Lambda is used to execute UDFs. On prem, a JVM is spun up and run next to the backend.
-
-*Note: on prem execution is less secure than SaaS execution. Only deploy UDFs that you trust to your on prem environment.*
 
 ## API Client
 
@@ -37,7 +36,9 @@ Let's look at the [list categories](https://doc.overops.com/reference#get_servic
 
 ```java
 // create a new Builder
-ApiClient client = ApiClient.newBuilder().setHostname("http://localhost:8080");
+ApiClient client = ApiClient.newBuilder()
+    .setHostname("http://localhost:8080") // for SaaS, use https://api.overops.com/
+    .setApiKey("xxxxxxxxxxx"); // find API token in Account Settings
 ```
 
 When writing a UDF, we suggest leveraging [ContextArgs](https://github.com/takipi/overops-functions/blob/master/overops-functions/src/main/java/com/takipi/udf/ContextArgs.java), which sets hostname and API key from the context and makes the API Client available.
@@ -83,7 +84,7 @@ Now [import the project into Eclipse](https://www.eclipse.org/community/eclipse_
 
 ![project tree](readme/tree.png "Project structure in Eclipse")
 
-This project contains two example functions that can be added to any view: [Hello World](https://github.com/daverted/udf/blob/master/my-udfs/src/main/java/com/example/udf/helloworld/HelloWorldFunction.java) and [Force Snapshot](https://github.com/daverted/udf/blob/master/my-udfs/src/main/java/com/example/udf/snapshot/ForceSnapshotFunction.java). Hello World is identical to [apply-label](https://github.com/takipi/overops-functions/blob/master/overops-functions/src/main/java/com/takipi/udf/label/ApplyLabelFunction.java), which applies a label to each new event. Force Snapshot runs periodically, calling [force snapshot](https://doc.overops.com/v4.28/reference#post_services-env-id-events-event-id-force-snapshot) for every event that has occurred in the last 5 minutes.
+This project contains two example functions that can be added to any view: [Hello World](https://github.com/daverted/udf/blob/master/my-udfs/src/main/java/com/example/udf/helloworld/HelloWorldFunction.java) and [Force Snapshot](https://github.com/daverted/udf/blob/master/my-udfs/src/main/java/com/example/udf/snapshot/ForceSnapshotFunction.java). Hello World is identical to [apply-label](https://github.com/takipi/overops-functions/blob/master/overops-functions/src/main/java/com/takipi/udf/label/ApplyLabelFunction.java), which applies a label to each new event. Force Snapshot runs periodically, calling [force snapshot](https://doc.overops.com/v4.28/reference#post_services-env-id-events-event-id-force-snapshot) for every event that has occurred in the last 5 minutes by default.
 
 ## Required Methods
 
@@ -116,6 +117,8 @@ When `validateInput` throws an exception, the UI displays an error containing th
 #### Input Utility
 
 To easily parse parameters, simply extend the class [`com.takipi.udf.input.Input`](https://github.com/takipi/overops-functions/blob/master/overops-functions/src/main/java/com/takipi/udf/input/Input.java).
+
+[comment]: <> (The example below will be updated soon. See https://overopshq.atlassian.net/browse/OO-4754)
 
 For example, the Automatic entry point timers function has four parameters: `timespan`, `std_dev`, `minimum_absolute_threshold`, and `minimum_threshold_delta`.
 
@@ -225,6 +228,7 @@ public static void main(String[] args) {
     if ((args == null) || (args.length < 3))
         throw new IllegalArgumentException("java MyFunction API_URL API_KEY SERVICE_ID");
 
+    // create new ContextArgs from command line arguments
     ContextArgs contextArgs = new ContextArgs();
 
     contextArgs.apiHost = args[0];
@@ -235,14 +239,14 @@ public static void main(String[] args) {
     SummarizedView view = ViewUtil.getServiceViewByName(contextArgs.apiClient(), contextArgs.serviceId, "All Events");
     contextArgs.viewId = view.id;
 
-    ApiClient apiClient = contextArgs.apiClient();
-
-    // get an event that has occurred in the last few minutes
+    // get an event that has occurred in the last 5 minutes
     DateTime to = DateTime.now();
     DateTime from = to.minusMinutes(5);
 
+    // date parameter must be properly formatted
     DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
 
+    // get all events within the date range
     EventsRequest eventsRequest = EventsRequest.newBuilder()
         .setServiceId(contextArgs.serviceId)
         .setViewId(contextArgs.viewId)
@@ -250,29 +254,38 @@ public static void main(String[] args) {
         .setTo(to.toString(fmt))
         .build();
 
+    // create a new API Client
+    ApiClient apiClient = contextArgs.apiClient();
+
+    // execute API GET request
     Response<EventsResult> eventsResponse = apiClient.get(eventsRequest);
 
-    if (eventsResponse.isBadResponse()) throw new IllegalStateException("Failed getting view events.");
+    // check for a bad API response
+    if (eventsResponse.isBadResponse()) throw new IllegalStateException("Failed getting events.");
 
+    // retrieve event data from the result
     EventsResult eventsResult = eventsResponse.data;
 
+    // exit if there are no events - increase date range if this occurs
     if (CollectionUtil.safeIsEmpty(eventsResult.events)) {
        System.out.println("NO EVENTS");
        return;
     }
 
+    // retrieve a list of events from the result
     List<EventResult> events = eventsResult.events;
 
+    // get the first event
     contextArgs.eventId = events.get(0).id;
 
-    // input parameters
-    String[] rawInput = new String[] { "label=Hello_World_" + contextArgs.eventId };
+    // set label to 'Hello_World_{eventId}'
+    String rawInput = "label=Hello_World_" + contextArgs.eventId;
 
     // convert context args to a JSON string
     String rawContextArgs = new Gson().toJson(contextArgs);
 
     // execute the UDF
-    HelloWorldFunction.execute(rawContextArgs, String.join("\n", rawInput));
+    HelloWorldFunction.execute(rawContextArgs, rawInput);
 }
 ```
 
@@ -287,7 +300,7 @@ This project depends on [overops-functions](https://github.com/takipi/overops-fu
 To build this project run:
 
 ```console
-./gradlew :my-udfs:fatJar
+./gradlew clean :my-udfs:fatJar
 ```
 
 The jar file is created in the `udf/my-udfs/build/libs` folder as `my-udfs-1.0.0.jar`.
@@ -301,7 +314,7 @@ In addition to your custom functions and their dependencies, the jar file upload
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <udf_manifest>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <library_name>my-udfs</library_name>
   <backwards_compatible>true</backwards_compatible>
   <functions>
@@ -309,7 +322,7 @@ In addition to your custom functions and their dependencies, the jar file upload
       <function_type>ANOMALY</function_type>
       <function_name>Force Snapshot</function_name>
       <description>
-        Force a snapshot the next time an event occurs for every event that's occurred in the last 5 minutes.
+        Force a snapshot the next time an event occurs for every event that's occurred in the last few minutes.
       </description>
       <param_type>TEXT</param_type>
       <class_file>com.example.udf.snapshot.ForceSnapshotFunction</class_file>
