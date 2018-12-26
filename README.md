@@ -292,7 +292,7 @@ public static void main(String[] args) {
 
 ## Building
 
-This project depends on [overops-functions](https://github.com/takipi/overops-functions/). First, check out the [overops-functions project](https://github.com/takipi/overops-functions/), then build and install the project locally with:
+This project depends on [overops-functions](https://github.com/takipi/overops-functions/). First, clone the [overops-functions project](https://github.com/takipi/overops-functions/), then build and install the project locally with:
 
 ```console
 ./gradlew :overops-functions:install
