@@ -106,36 +106,30 @@ public class HelloWorldFunction {
 
   // A sample program on how to programmatically activate
   public static void main(String[] args) {
-    if ((args == null) || (args.length < 3))
-      throw new IllegalArgumentException("java ForceSnapshotFunction API_URL API_KEY SERVICE_ID");
 
+    // pass API Host, Key, and Service ID as command line arguments
+    if ((args == null) || (args.length < 3))
+      throw new IllegalArgumentException("java HelloWorldFunction API_URL API_KEY SERVICE_ID");
+
+    // create new ContextArgs from command line arguments
     ContextArgs contextArgs = new ContextArgs();
 
     contextArgs.apiHost = args[0];
     contextArgs.apiKey = args[1];
     contextArgs.serviceId = args[2];
 
-    SummarizedView view = ViewUtil.getServiceViewByName(
-      contextArgs.apiClient(),
-      contextArgs.serviceId,
-      "All Events");
+    // get "All Events" view
+    SummarizedView view = ViewUtil.getServiceViewByName(contextArgs.apiClient(), contextArgs.serviceId, "All Events");
+    contextArgs.viewId = view.id;
 
-      contextArgs.viewId = view.id;
-
-    ApiClient apiClient = contextArgs.apiClient();
-
-    // get an event that has occurred in the last few minutes
-
+    // get an event that has occurred in the last 5 minutes
     DateTime to = DateTime.now();
-    DateTime from = to.minusMinutes(60);
+    DateTime from = to.minusMinutes(5);
 
+    // date parameter must be properly formatted
     DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
 
-    System.out.print("to: ");
-    System.out.println(to.toString(fmt));
-    System.out.print("from: ");
-    System.out.println(from.toString(fmt));
-
+    // get all events within the date range
     EventsRequest eventsRequest = EventsRequest.newBuilder()
       .setServiceId(contextArgs.serviceId)
       .setViewId(contextArgs.viewId)
@@ -143,34 +137,37 @@ public class HelloWorldFunction {
       .setTo(to.toString(fmt))
       .build();
 
+    // create a new API Client
+    ApiClient apiClient = contextArgs.apiClient();
+
+    // execute API GET request
     Response<EventsResult> eventsResponse = apiClient.get(eventsRequest);
 
-    System.out.print("eventsResponse: ");
-    System.out.println(eventsResponse);
-    
-    if (eventsResponse.isBadResponse())
-      throw new IllegalStateException("Failed getting view events.");
-  
+    // check for a bad API response
+    if (eventsResponse.isBadResponse()) throw new IllegalStateException("Failed getting events.");
+
+    // retrieve event data from the result
     EventsResult eventsResult = eventsResponse.data;
 
-    System.out.print("eventsResult: ");
-    System.out.println(eventsResult);
-
+    // exit if there are no events - increase date range if this occurs
     if (CollectionUtil.safeIsEmpty(eventsResult.events)) {
       System.out.println("NO EVENTS");
       return;
     }
 
+    // retrieve a list of events from the result
     List<EventResult> events = eventsResult.events;
 
+    // get the first event
     contextArgs.eventId = events.get(0).id;
 
-    // some test values
-    String[] sampleValues = new String[] { "label=Hello_World_" + contextArgs.eventId };
+    // set label to 'Hello_World_{eventId}'
+    String rawInput = "label=Hello_World_" + contextArgs.eventId;
 
+    // convert context args to a JSON string
     String rawContextArgs = new Gson().toJson(contextArgs);
 
-    HelloWorldFunction.execute(rawContextArgs, String.join("\n", sampleValues));
+    // execute the UDF
+    HelloWorldFunction.execute(rawContextArgs, rawInput);
   }
-
 }

@@ -226,7 +226,7 @@ public static void main(String[] args) {
 
     // pass API Host, Key, and Service ID as command line arguments
     if ((args == null) || (args.length < 3))
-        throw new IllegalArgumentException("java MyFunction API_URL API_KEY SERVICE_ID");
+        throw new IllegalArgumentException("java HelloWorldFunction API_URL API_KEY SERVICE_ID");
 
     // create new ContextArgs from command line arguments
     ContextArgs contextArgs = new ContextArgs();
