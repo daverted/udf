@@ -13,7 +13,8 @@
       <param_type>TEXT</param_type>
       <class_file>com.example.udf.snapshot.ForceSnapshotFunction</class_file>
       <default_params>
-        # This function has no parameters.
+        # Get events from the last {timespan} minutes
+        timespan=5
       </default_params>
       <admin_function>true</admin_function>
     </function>
