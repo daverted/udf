@@ -323,14 +323,28 @@ In addition to your custom functions and their dependencies, the jar file upload
       <function_type>ANOMALY</function_type>
       <function_name>Force Snapshot</function_name>
       <description>
-        Force a snapshot the next time an event occurs for every event that's occurred in the last few minutes.
+        Force a snapshot the next time an event occurs for every event that has occurred in the last 5 minutes.
       </description>
       <param_type>TEXT</param_type>
       <class_file>com.example.udf.snapshot.ForceSnapshotFunction</class_file>
       <default_params>
-        # This function has no parameters.
+        # Get events from the last {timespan} minutes
+        timespan=5
       </default_params>
       <admin_function>true</admin_function>
+    </function>
+    <function>
+      <function_type>CHANNEL</function_type>
+      <function_name>Hello World</function_name>
+      <description>
+        Simple "Hello, World!" UDF that applies a label to events.
+      </description>
+      <param_type>TEXT</param_type>
+      <class_file>com.example.udf.helloworld.HelloWorldFunction</class_file>
+      <default_params>
+        # Label to apply to events
+        label=Hello_World
+      </default_params>
     </function>
   </functions>
 </udf_manifest>
