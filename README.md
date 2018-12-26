@@ -119,7 +119,7 @@ When `validateInput` throws an exception, the UI displays an error containing th
 
 To easily parse parameters, simply extend the class [`com.takipi.udf.input.Input`](https://github.com/takipi/overops-functions/blob/master/overops-functions/src/main/java/com/takipi/udf/input/Input.java).
 
-[comment]: <> (The example below will be updated soon. See https://overopshq.atlassian.net/browse/OO-4754)
+<!-- (The example below will be updated soon. See https://overopshq.atlassian.net/browse/OO-4754) -->
 
 For example, the Automatic entry point timers function has four parameters: `timespan`, `std_dev`, `minimum_absolute_threshold`, and `minimum_threshold_delta`.
 
