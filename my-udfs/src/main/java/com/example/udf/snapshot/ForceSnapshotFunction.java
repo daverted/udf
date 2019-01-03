@@ -26,155 +26,152 @@ import com.takipi.udf.ContextArgs;
 import com.takipi.udf.input.Input;
 
 public class ForceSnapshotFunction {
-  public static String validateInput(String rawInput) {
-    return getForceSnapshotInput(rawInput).toString();
-  }
+	public static String validateInput(String rawInput) {
+		return getForceSnapshotInput(rawInput).toString();
+	}
 
-  public static void execute(String rawContextArgs, String rawInput) {
-    ForceSnapshotInput input = getForceSnapshotInput(rawInput);
+	public static void execute(String rawContextArgs, String rawInput) {
+		ForceSnapshotInput input = getForceSnapshotInput(rawInput);
 
-    ContextArgs args = (new Gson()).fromJson(rawContextArgs, ContextArgs.class);
+		ContextArgs args = (new Gson()).fromJson(rawContextArgs, ContextArgs.class);
 
-    System.out.println("execute context: " + rawContextArgs);
+		System.out.println("execute context: " + rawContextArgs);
 
-    if (!args.validate()) throw new IllegalArgumentException("Bad context args: " + rawContextArgs);
+		if (!args.validate())
+			throw new IllegalArgumentException("Bad context args: " + rawContextArgs);
 
-    if (!args.viewValidate()) return;
+		if (!args.viewValidate())
+			return;
 
-    ApiClient apiClient = args.apiClient();
+		ApiClient apiClient = args.apiClient();
 
-    // get all events that have occurred in the last {timespan} minutes
-    DateTime to = DateTime.now();
-    DateTime from = to.minusMinutes(input.timespan);
+		// get all events that have occurred in the last {timespan} minutes
+		DateTime to = DateTime.now();
+		DateTime from = to.minusMinutes(input.timespan);
 
-    DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
+		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
 
-    // EventsSlimVolumeRequest is similar to EventsRequest but without extra metadata
-    EventsSlimVolumeRequest eventsRequest = EventsSlimVolumeRequest.newBuilder()
-      .setServiceId(args.serviceId)
-      .setViewId(args.viewId)
-      .setFrom(from.toString(fmt))
-      .setTo(to.toString(fmt))
-      .setVolumeType(VolumeType.all)
-      .build();
+		// EventsSlimVolumeRequest is similar to EventsRequest but without extra
+		// metadata
+		EventsSlimVolumeRequest eventsRequest = EventsSlimVolumeRequest.newBuilder().setServiceId(args.serviceId)
+				.setViewId(args.viewId).setFrom(from.toString(fmt)).setTo(to.toString(fmt))
+				.setVolumeType(VolumeType.all).build();
 
-    Response<EventsSlimVolumeResult> eventsResponse = apiClient.get(eventsRequest);
+		Response<EventsSlimVolumeResult> eventsResponse = apiClient.get(eventsRequest);
 
-    if (eventsResponse.isBadResponse())
-      throw new IllegalStateException("Failed getting events.");
+		if (eventsResponse.isBadResponse())
+			throw new IllegalStateException("Failed getting events.");
 
-    EventsSlimVolumeResult eventsResult = eventsResponse.data;
+		EventsSlimVolumeResult eventsResult = eventsResponse.data;
 
-    if (CollectionUtil.safeIsEmpty(eventsResult.events)) {
-      System.out.println("Found no events from the last "+input.timespan+" minutes.");
-      return;
-    }
+		if (CollectionUtil.safeIsEmpty(eventsResult.events)) {
+			System.out.println("Found no events from the last " + input.timespan + " minutes.");
+			return;
+		}
 
-    List<EventSlimResult> events = eventsResult.events;
-    List<String> eventIds = new ArrayList<String>();
+		List<EventSlimResult> events = eventsResult.events;
+		List<String> eventIds = new ArrayList<String>();
 
-    for (EventSlimResult result : events) {
-      System.out.print("event id: " + result.id + "     ");
-      eventIds.add(result.id);
+		for (EventSlimResult result : events) {
+			System.out.print("event id: " + result.id + "     ");
+			eventIds.add(result.id);
 
-      // manually call force snapshot here - troubleshooting batch request
-      EventForceSnapshotRequest request = EventForceSnapshotRequest.newBuilder()
-        .setServiceId(args.serviceId)
-        .setEventId(result.id)
-        .build();
+			// manually call force snapshot here - troubleshooting batch request
+			EventForceSnapshotRequest request = EventForceSnapshotRequest.newBuilder().setServiceId(args.serviceId)
+					.setEventId(result.id).build();
 
-      Response<EmptyResult> response = apiClient.post(request);
+			Response<EmptyResult> response = apiClient.post(request);
 
-      if (response.isBadResponse()) {
-        throw new IllegalStateException("Force Snapshot failed for event " + args.eventId);
-      } else {
-        System.out.println("response: " + response.responseCode);
-        try {
-          Thread.sleep(5000);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
-    }
+			if (response.isBadResponse()) {
+				throw new IllegalStateException("Force Snapshot failed for event " + args.eventId);
+			} else {
+				System.out.println("response: " + response.responseCode);
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
-    // force snapshot all of the retrieved events
-    // BatchForceSnapshotsRequest batchRequest = BatchForceSnapshotsRequest.newBuilder()
-    //     .addEventIds(eventIds)
-    //     .setServiceId(args.serviceId)
-    //     .build();
+		// force snapshot all of the retrieved events
+		// BatchForceSnapshotsRequest batchRequest =
+		// BatchForceSnapshotsRequest.newBuilder()
+		// .addEventIds(eventIds)
+		// .setServiceId(args.serviceId)
+		// .build();
 
-    // Response<EmptyResult> batchResponse = apiClient.post(batchRequest);
+		// Response<EmptyResult> batchResponse = apiClient.post(batchRequest);
 
-    // if (batchResponse.isBadResponse())
-    //   throw new IllegalStateException("Batch Force Snapshot failed");
+		// if (batchResponse.isBadResponse())
+		// throw new IllegalStateException("Batch Force Snapshot failed");
 
-  }
+	}
 
-  private static ForceSnapshotInput getForceSnapshotInput(String rawInput) {
-    System.out.println("rawInput:" + rawInput);
+	private static ForceSnapshotInput getForceSnapshotInput(String rawInput) {
+		System.out.println("rawInput:" + rawInput);
 
-    if (Strings.isNullOrEmpty(rawInput)) throw new IllegalArgumentException("Input is empty");
+		if (Strings.isNullOrEmpty(rawInput))
+			throw new IllegalArgumentException("Input is empty");
 
-    ForceSnapshotInput input;
+		ForceSnapshotInput input;
 
-    try {
-      input = ForceSnapshotInput.of(rawInput);
-    } catch (Exception e) {
-      throw new IllegalArgumentException(e.getMessage(), e);
-    }
+		try {
+			input = ForceSnapshotInput.of(rawInput);
+		} catch (Exception e) {
+			throw new IllegalArgumentException(e.getMessage(), e);
+		}
 
-    if (input.timespan <= 0)
-      throw new IllegalArgumentException("'timespan' must be positive");
+		if (input.timespan <= 0)
+			throw new IllegalArgumentException("'timespan' must be positive");
 
-    return input;
-  }
+		return input;
+	}
 
-  static class ForceSnapshotInput extends Input {
-    public int timespan;
+	static class ForceSnapshotInput extends Input {
+		public int timespan;
 
-    private ForceSnapshotInput(String raw) {
-      super(raw);
-    }
+		private ForceSnapshotInput(String raw) {
+			super(raw);
+		}
 
-    @Override
-    public String toString() {
-      StringBuilder builder = new StringBuilder();
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
 
-      builder.append("Force Snapshot (");
-      builder.append(timespan);
-      builder.append(" min)");
+			builder.append("Force Snapshot (");
+			builder.append(timespan);
+			builder.append(" min)");
 
-      return builder.toString();
-    }
+			return builder.toString();
+		}
 
-    static ForceSnapshotInput of(String raw) {
-      return new ForceSnapshotInput(raw);
-    }
-  }
+		static ForceSnapshotInput of(String raw) {
+			return new ForceSnapshotInput(raw);
+		}
+	}
 
-  // A sample program on how to programmatically activate
-  public static void main(String[] args) {
-    if ((args == null) || (args.length < 3))
-      throw new IllegalArgumentException("java ForceSnapshotFunction API_URL API_KEY SERVICE_ID");
+	// A sample program on how to programmatically activate
+	public static void main(String[] args) {
+		if ((args == null) || (args.length < 3))
+			throw new IllegalArgumentException("java ForceSnapshotFunction API_URL API_KEY SERVICE_ID");
 
-    ContextArgs contextArgs = new ContextArgs();
+		ContextArgs contextArgs = new ContextArgs();
 
-    contextArgs.apiHost = args[0];
-    contextArgs.apiKey = args[1];
-    contextArgs.serviceId = args[2];
+		contextArgs.apiHost = args[0];
+		contextArgs.apiKey = args[1];
+		contextArgs.serviceId = args[2];
 
-    SummarizedView view = ViewUtil.getServiceViewByName(
-      contextArgs.apiClient(),
-      contextArgs.serviceId,
-      "EventGenerator");
-      // "Custom OverOps Event");
-      // "All Events");
+		SummarizedView view = ViewUtil.getServiceViewByName(contextArgs.apiClient(), contextArgs.serviceId,
+				"EventGenerator");
+		// "Custom OverOps Event");
+		// "All Events");
 
-    contextArgs.viewId = view.id;
+		contextArgs.viewId = view.id;
 
-    System.out.println("view id: " + view.id);
+		System.out.println("view id: " + view.id);
 
-    String rawContextArgs = new Gson().toJson(contextArgs);
-    ForceSnapshotFunction.execute(rawContextArgs, "timespan=5");
-  }
+		String rawContextArgs = new Gson().toJson(contextArgs);
+		ForceSnapshotFunction.execute(rawContextArgs, "timespan=5");
+	}
 }
