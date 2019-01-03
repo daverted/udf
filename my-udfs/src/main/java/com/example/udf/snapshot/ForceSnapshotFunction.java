@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.takipi.api.client.ApiClient;
 import com.takipi.api.client.data.view.SummarizedView;
 import com.takipi.api.client.request.event.BatchForceSnapshotsRequest;
+import com.takipi.api.client.request.event.EventForceSnapshotRequest;
 import com.takipi.api.client.request.event.EventsSlimVolumeRequest;
 import com.takipi.api.client.result.EmptyResult;
 import com.takipi.api.client.result.event.EventSlimResult;
@@ -73,20 +74,40 @@ public class ForceSnapshotFunction {
     List<String> eventIds = new ArrayList<String>();
 
     for (EventSlimResult result : events) {
-      System.out.println("event id: " + result.id);
+      System.out.print("event id: " + result.id + "     ");
       eventIds.add(result.id);
+
+      // manually call force snapshot here - troubleshooting batch request
+      EventForceSnapshotRequest request = EventForceSnapshotRequest.newBuilder()
+        .setServiceId(args.serviceId)
+        .setEventId(result.id)
+        .build();
+
+      Response<EmptyResult> response = apiClient.post(request);
+
+      if (response.isBadResponse()) {
+        throw new IllegalStateException("Force Snapshot failed for event " + args.eventId);
+      } else {
+        System.out.println("response: " + response.responseCode);
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      }
     }
 
     // force snapshot all of the retrieved events
-    BatchForceSnapshotsRequest batchRequest = BatchForceSnapshotsRequest.newBuilder()
-        .addEventIds(eventIds)
-        .setServiceId(args.serviceId)
-        .build();
+    // BatchForceSnapshotsRequest batchRequest = BatchForceSnapshotsRequest.newBuilder()
+    //     .addEventIds(eventIds)
+    //     .setServiceId(args.serviceId)
+    //     .build();
 
-    Response<EmptyResult> batchResponse = apiClient.post(batchRequest);
+    // Response<EmptyResult> batchResponse = apiClient.post(batchRequest);
 
-    if (batchResponse.isBadResponse())
-      throw new IllegalStateException("Batch Force Snapshot failed");
+    // if (batchResponse.isBadResponse())
+    //   throw new IllegalStateException("Batch Force Snapshot failed");
 
   }
 
@@ -146,9 +167,13 @@ public class ForceSnapshotFunction {
     SummarizedView view = ViewUtil.getServiceViewByName(
       contextArgs.apiClient(),
       contextArgs.serviceId,
-      "All Events");
+      "EventGenerator");
+      // "Custom OverOps Event");
+      // "All Events");
 
-      contextArgs.viewId = view.id;
+    contextArgs.viewId = view.id;
+
+    System.out.println("view id: " + view.id);
 
     String rawContextArgs = new Gson().toJson(contextArgs);
     ForceSnapshotFunction.execute(rawContextArgs, "timespan=5");
