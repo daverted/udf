@@ -378,9 +378,14 @@ The `functions` field contains individual `function` entries for each UDF in you
 
 ## Deleting UDFs
 
-To delete a custom UDF library, you'll need to make two API calls. First, get the library ID, then delete the library by ID. These API methods are not implemented in the API Client. You'll need to call them with `curl` or a tool like [Postman](https://www.getpostman.com/).
 
-[List UDF libraries](https://doc.overops.com/v4.28/reference#get_services-env-id-udfs):
+To delete a custom UDF library, you'll need to make two API calls. First, get the library ID, then delete the library by ID.
+
+This can be done using the API Client or manually with `curl` or a tool like [Postman](https://www.getpostman.com/).
+
+[List UDF libraries](https://doc.overops.com/v4.28/reference#get_services-env-id-udfs)
+
+To list custom UDF libraries using the API client, call the [`FunctionsRequest`](https://github.com/takipi/api-client/blob/master/api-client/src/main/java/com/takipi/api/client/request/functions/FunctionsRequest.java) method.
 
 ```console
 curl -H "x-api-key: API_KEY_HERE" \
@@ -388,7 +393,11 @@ curl -H "x-api-key: API_KEY_HERE" \
   --url https://api.overops.com/api/v1/services/env_id/udfs
 ```
 
-[Delete UDF library](https://doc.overops.com/v4.28/reference#delete_services-env-id-udfs-library-id):
+[Delete UDF library](https://doc.overops.com/v4.28/reference#delete_services-env-id-udfs-library-id)
+
+To delete a custom UDF library using the API Client, call the [`DeleteFunctionRequest`](https://github.com/takipi/api-client/blob/master/api-client/src/main/java/com/takipi/api/client/request/functions/DeleteFunctionRequest.java) method.
+
+Or, using curl:
 
 ```console
 curl -H "x-api-key: API_KEY_HERE" \
