@@ -143,13 +143,11 @@ public class ForceSnapshotFunction {
 		contextArgs.serviceId = args[2];
 
 		SummarizedView view = ViewUtil.getServiceViewByName(contextArgs.apiClient(), contextArgs.serviceId,
-				"EventGenerator");
-		// "Custom OverOps Event");
-		// "All Events");
+				"ForceSnapshot");
 
 		contextArgs.viewId = view.id;
 
-		System.out.println("current time: " + DateTime.now() );
+		System.out.println("current time: " + DateTime.now());
 		System.out.println("view id: " + view.id);
 
 		String rawContextArgs = new Gson().toJson(contextArgs);
