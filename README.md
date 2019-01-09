@@ -39,7 +39,8 @@ Let's look at the [list categories](https://doc.overops.com/reference#get_servic
 // create a new Builder
 ApiClient client = ApiClient.newBuilder()
     .setHostname("http://localhost:8080") // for SaaS, use https://api.overops.com/
-    .setApiKey("xxxxxxxxxxx"); // find API token in Account Settings
+    .setApiKey("xxxxxxxxxxx") // find API token in Account Settings
+    .build();
 ```
 
 When writing a UDF, we suggest leveraging [ContextArgs](https://github.com/takipi/overops-functions/blob/master/overops-functions/src/main/java/com/takipi/udf/ContextArgs.java), which sets hostname and API key from the context and makes the API Client available.
