@@ -3,8 +3,8 @@ subprojects {
 	apply plugin: 'maven'
 	apply plugin: 'eclipse'
 	
-	group = 'com.example'
-	version = '1.0.5'
+	group = 'com.overops'
+	version = '1.0.0'
 	
 	repositories {
 		mavenCentral()

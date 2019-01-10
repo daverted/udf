@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <udf_manifest>
-  <version>1.0.2</version>
-  <library_name>my-udfs</library_name>
+  <version>1.0.0</version>
+  <library_name>force-snapshot</library_name>
   <backwards_compatible>true</backwards_compatible>
   <functions>
     <function>
@@ -11,25 +11,12 @@
         Force a snapshot the next time an event occurs for every event that has occurred in the last {timespan} minutes.
       </description>
       <param_type>TEXT</param_type>
-      <class_file>com.example.udf.snapshot.ForceSnapshotFunction</class_file>
+      <class_file>com.overops.udf.snapshot.ForceSnapshotFunction</class_file>
       <default_params>
         # Get events from the last {timespan} minutes
         timespan=5
       </default_params>
       <admin_function>true</admin_function>
-    </function>
-    <function>
-      <function_type>CHANNEL</function_type>
-      <function_name>Hello World</function_name>
-      <description>
-        Simple "Hello, World!" UDF that applies a label to events.
-      </description>
-      <param_type>TEXT</param_type>
-      <class_file>com.example.udf.helloworld.HelloWorldFunction</class_file>
-      <default_params>
-        # Label to apply to events
-        label=Hello_World
-      </default_params>
     </function>
   </functions>
 </udf_manifest>
