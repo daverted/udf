@@ -50,24 +50,28 @@ public class ForceSnapshotFunction {
 
 		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
 
-		// EventsSlimVolumeRequest is similar to EventsRequest but without extra
-		// metadata
+		// EventsSlimVolumeRequest is similar to EventsRequest but without extra metadata
 		EventsSlimVolumeRequest eventsRequest = EventsSlimVolumeRequest.newBuilder().setServiceId(args.serviceId)
 				.setViewId(args.viewId).setFrom(from.toString(fmt)).setTo(to.toString(fmt))
 				.setVolumeType(VolumeType.all).build();
 
+		// GET events
 		Response<EventsSlimVolumeResult> eventsResponse = apiClient.get(eventsRequest);
 
+		// validate API response
 		if (eventsResponse.isBadResponse())
 			throw new IllegalStateException("Failed getting events.");
 
+		// extract data
 		EventsSlimVolumeResult eventsResult = eventsResponse.data;
 
+		// check for events
 		if (CollectionUtil.safeIsEmpty(eventsResult.events)) {
 			System.out.println("Found no events from the last " + input.timespan + " minutes.");
 			return;
 		}
 
+		// make a list of event IDs (as strings)
 		List<EventSlimResult> events = eventsResult.events;
 		List<String> eventIds = new ArrayList<String>();
 
@@ -76,12 +80,14 @@ public class ForceSnapshotFunction {
 			eventIds.add(result.id);
 		}
 
-		// force snapshot all of the retrieved events
+		// request force snapshot of the retrieved events
 		BatchForceSnapshotsRequest batchRequest = BatchForceSnapshotsRequest.newBuilder().addEventIds(eventIds)
 				.setServiceId(args.serviceId).build();
 
+		// POST batch force snapshot request
 		Response<EmptyResult> batchResponse = apiClient.post(batchRequest);
 
+		// validate API response
 		if (batchResponse.isBadResponse())
 			throw new IllegalStateException("Batch Force Snapshot failed");
 
@@ -91,17 +97,20 @@ public class ForceSnapshotFunction {
 	private static ForceSnapshotInput getForceSnapshotInput(String rawInput) {
 		System.out.println("rawInput:" + rawInput);
 
+		// params cannot be empty
 		if (Strings.isNullOrEmpty(rawInput))
 			throw new IllegalArgumentException("Input is empty");
 
 		ForceSnapshotInput input;
 
+		// parse params
 		try {
 			input = ForceSnapshotInput.of(rawInput);
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}
 
+		// validate timespan
 		if (input.timespan <= 0)
 			throw new IllegalArgumentException("'timespan' must be positive");
 
