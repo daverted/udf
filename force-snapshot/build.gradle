@@ -1,6 +1,6 @@
 apply plugin: 'eu.appsatori.fatjar'
 
-archivesBaseName = 'my-udfs'
+archivesBaseName = 'force-snapshot'
 
 buildscript {
   repositories {
@@ -26,7 +26,7 @@ fatJar {
   exclude 'META-INF/maven'
   exclude 'META-INF/*.example'
   manifest {
-    attributes 'Main-Class': 'MyUDFs'
+    attributes 'Main-Class': 'ForceSnapshot'
   }
 }
 
@@ -34,8 +34,8 @@ uploadArchives {
   repositories {
     mavenDeployer {
       pom.project {
-        name 'my-udfs'
-        description 'My User Defined Functions extending OverOps'
+        name 'force-snapshot'
+        description 'Force Snapshot User Defined Function'
         
         licenses {
           license {
@@ -45,9 +45,9 @@ uploadArchives {
         }
 
         scm {
-          connection 'scm:git:https://github.com/takipi-field/udf/tree/master/my-udfs'
-          developerConnection 'scm:git:https://github.com/takipi-field/udf/tree/master/my-udfs'
-          url 'https://github.com/takipi-field/udf/tree/master/my-udfs'
+          connection 'scm:git:https://github.com/takipi-field/udf/tree/force-snapshot/force-snapshot'
+          developerConnection 'scm:git:https://github.com/takipi-field/udf/tree/force-snapshot/force-snapshot'
+          url 'https://github.com/takipi-field/udf/tree/force-snapshot/force-snapshot'
         }
       }
     }
