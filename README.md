@@ -46,7 +46,7 @@ When writing a UDF, we suggest leveraging [ContextArgs](https://github.com/takip
 
 ```java
 // from ContextArgs in a UDF
-ApiClient apiClient = contextArgs.apiClient();
+ApiClient client = contextArgs.apiClient();
 ```
 
 Let's look at the [list categories](https://doc.overops.com/reference#get_services-env-id-categories) API.
