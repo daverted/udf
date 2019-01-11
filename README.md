@@ -33,10 +33,9 @@ Since UDFs were designed to be simple and flexible, they're more useful when com
 
 The API Client is divided into two projects: the API Client itself, and a set of utility functions. The API Client provides methods for get, put, post, and delete rest operations, as well as POJOs that represent request and result objects for each operation available through the public API. Utility functions wrap commonly used operation sets into a single function.
 
-Let's look at the [list categories](https://doc.overops.com/reference#get_services-env-id-categories) API.
+In order to be backwards and forwards compatible with the API, API Client constructors are purposefully not public. Instead, we use Builders. This enables us to be able to change the underlying implementation and add additional functionality in the future without breaking code that depends on API Client.
 
 ```java
-// create a new Builder
 ApiClient client = ApiClient.newBuilder()
     .setHostname("http://localhost:8080") // for SaaS, use https://api.overops.com/
     .setApiKey("xxxxxxxxxxx") // find API token in Account Settings
@@ -50,7 +49,7 @@ When writing a UDF, we suggest leveraging [ContextArgs](https://github.com/takip
 ApiClient apiClient = contextArgs.apiClient();
 ```
 
-In order to be backwards and forwards compatible with the API, API Client constructors are purposefully not public. Instead, we use Builders. This enables us to be able to change the underlying implementation and add additional functionality in the future without breaking code that depends on API Client.
+Let's look at the [list categories](https://doc.overops.com/reference#get_services-env-id-categories) API.
 
 List categories requires only a service ID:
 
