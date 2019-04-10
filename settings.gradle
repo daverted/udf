@@ -1,2 +1,2 @@
 rootProject.name = "udf"
-include "force-snapshot"
+include "jira-integration"

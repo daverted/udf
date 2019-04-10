@@ -1,11 +1,14 @@
 apply plugin: 'eu.appsatori.fatjar'
 
-archivesBaseName = 'force-snapshot'
+archivesBaseName = 'jira-integration'
 
 buildscript {
   repositories {
     jcenter()
     mavenLocal()
+    maven {
+      url 'https://packages.atlassian.com/maven/repository/public'
+    }
   }
 
   dependencies {
@@ -16,9 +19,11 @@ buildscript {
 dependencies {
   compile (
     "org.apache.commons:commons-lang3:3.7",
-    "com.takipi:api-client:2.9.2",
-    "com.takipi:api-client-util:2.9.2",
-    "com.takipi:overops-functions:2.0.0"
+    "com.takipi:api-client:2.11.0",
+    "com.takipi:api-client-util:2.11.0",
+    "com.takipi:overops-functions:2.0.0",
+    "com.atlassian.jira:jira-rest-java-client:2.0.0-m2"
+    // "org.slf4j:slf4j-simple:1.6.2"
   )
 }
 
@@ -26,7 +31,7 @@ fatJar {
   exclude 'META-INF/maven'
   exclude 'META-INF/*.example'
   manifest {
-    attributes 'Main-Class': 'ForceSnapshot'
+    attributes 'Main-Class': 'JiraIntegration'
   }
 }
 
@@ -34,8 +39,8 @@ uploadArchives {
   repositories {
     mavenDeployer {
       pom.project {
-        name 'force-snapshot'
-        description 'Force Snapshot User Defined Function'
+        name 'jira-integration'
+        description 'Jira Integration User Defined Function'
         
         licenses {
           license {
@@ -45,9 +50,9 @@ uploadArchives {
         }
 
         scm {
-          connection 'scm:git:https://github.com/takipi-field/udf/tree/force-snapshot/force-snapshot'
-          developerConnection 'scm:git:https://github.com/takipi-field/udf/tree/force-snapshot/force-snapshot'
-          url 'https://github.com/takipi-field/udf/tree/force-snapshot/force-snapshot'
+          connection 'scm:git:https://github.com/takipi-field/udf/tree/jira-integration/jira-integration'
+          developerConnection 'scm:git:https://github.com/takipi-field/udf/tree/jira-integration/jira-integration'
+          url 'https://github.com/takipi-field/udf/tree/jira-integration/jira-integration'
         }
       }
     }
