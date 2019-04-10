@@ -9,6 +9,9 @@ subprojects {
 	repositories {
 		mavenCentral()
 		mavenLocal()
+		maven {
+			url 'https://packages.atlassian.com/maven/repository/public'
+		}
 	}
 	task javadocJar(type: Jar) {
 			classifier = 'javadoc'
