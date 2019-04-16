@@ -228,19 +228,17 @@ public class JiraIntegrationFunction {
 
 						} else {
 							// 4. anything else, mark "in Inbox" in Jira
-              for (Transition transition : transitions) {
-                if (transition.getName().equals(input.inboxStatus)) {
-                  TransitionInput transitionInput = new TransitionInput(transition.getId());
-                  client.getIssueClient().transition(issue, transitionInput).claim();
-                  break;
-                }
-              }
+							for (Transition transition : transitions) {
+								if (transition.getName().equals(input.inboxStatus)) {
+									TransitionInput transitionInput = new TransitionInput(transition.getId());
+									client.getIssueClient().transition(issue, transitionInput).claim();
+									break;
+								}
+							}
 						}
 
 					}
 
-					// make it easier to read output
-					System.out.println();
 				}
 
 			}
@@ -295,8 +293,6 @@ public class JiraIntegrationFunction {
 	}
 
 	private static JiraIntegrationInput getJiraIntegrationInput(String rawInput) {
-		System.out.println("rawInput:" + rawInput);
-
 		// params cannot be empty
 		if (Strings.isNullOrEmpty(rawInput))
 			throw new IllegalArgumentException("Input is empty");
@@ -312,16 +308,16 @@ public class JiraIntegrationFunction {
 
 		// validate timespan
 		if (input.timespan <= 0)
-			throw new IllegalArgumentException("'timespan' must be positive");
+			throw new IllegalArgumentException("'timespan' must be at least 1 day");
 
 		if (input.jiraURL == null || input.jiraURL.isEmpty())
-			throw new IllegalArgumentException("'jiraURL' is not defined");
+			throw new IllegalArgumentException("'jiraURL' is required");
 
 		if (input.jiraUsername == null || input.jiraUsername.isEmpty())
-			throw new IllegalArgumentException("'jiraUsername' is not defined");
+			throw new IllegalArgumentException("'jiraUsername' is required");
 
 		if (input.jiraPassword == null || input.jiraPassword.isEmpty())
-			throw new IllegalArgumentException("'jiraPassword' is not defined");
+			throw new IllegalArgumentException("'jiraPassword' is required");
 
 
 		return input;
@@ -350,9 +346,7 @@ public class JiraIntegrationFunction {
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
 
-			builder.append("Jira Integration (");
-			builder.append(timespan);
-			builder.append(" days)");
+			builder.append("Sync Jira");
 
 			return builder.toString();
 		}
@@ -362,7 +356,7 @@ public class JiraIntegrationFunction {
 		}
 	}
 
-	// A sample program on how to programmatically activate
+	// for testing
 	public static void main(String[] args) {
 		if ((args == null) || (args.length < 6))
 			throw new IllegalArgumentException("java JiraIntegrationFunction API_URL API_KEY SERVICE_ID JIRA_URL JIRA_USER JIRA_PASS");
