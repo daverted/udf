@@ -1,12 +1,8 @@
 package com.overops.udf.jira;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -19,7 +15,11 @@ import com.takipi.api.client.ApiClient;
 import com.takipi.api.client.data.event.Action;
 import com.takipi.api.client.data.view.SummarizedView;
 import com.takipi.api.client.request.event.EventActionsRequest;
+import com.takipi.api.client.request.event.EventDeleteRequest;
+import com.takipi.api.client.request.event.EventInboxRequest;
+import com.takipi.api.client.request.event.EventMarkResolvedRequest;
 import com.takipi.api.client.request.event.EventsRequest;
+import com.takipi.api.client.result.EmptyResult;
 import com.takipi.api.client.result.event.EventActionsResult;
 import com.takipi.api.client.result.event.EventResult;
 import com.takipi.api.client.result.event.EventsResult;
@@ -32,10 +32,9 @@ import com.takipi.udf.input.Input;
 import com.atlassian.jira.rest.client.JiraRestClient;
 import com.atlassian.jira.rest.client.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.domain.Issue;
-import com.atlassian.jira.rest.client.domain.User;
+import com.atlassian.jira.rest.client.domain.Transition;
+import com.atlassian.jira.rest.client.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.atlassian.util.concurrent.Promise;
-
 
 public class JiraIntegrationFunction {
 	public static String validateInput(String rawInput) {
@@ -62,6 +61,7 @@ public class JiraIntegrationFunction {
 		DateTime from = to.minusDays(input.timespan);
 
 		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
+
 		EventsRequest eventsRequest = EventsRequest.newBuilder().setServiceId(args.serviceId).setViewId(args.viewId)
 				.setFrom(from.toString(fmt)).setTo(to.toString(fmt)).build();
 
@@ -94,14 +94,6 @@ public class JiraIntegrationFunction {
 			uri = new URI(input.jiraURL);
 			JiraRestClient client = factory.createWithBasicHttpAuthentication(uri, input.jiraUsername, input.jiraPassword);
 
-			// Invoke the JRJC Client
-			Promise<User> promise = client.getUserClient().getUser(input.jiraUsername);
-			User user = promise.claim();
-
-			// Sanity check
-			// System.out.println(String.format("Your Jira user's email address is: %s\r\n", user.getEmailAddress()));
-			// System.out.println();
-
 			// for each event with a Jira issue URL
 			for (EventResult event : events) {
 				if (event.jira_issue_url != null) {
@@ -109,16 +101,11 @@ public class JiraIntegrationFunction {
 					// get Jira issue ID from OO event's Jira issue URL
 					String issueId = getJiraIssueId(event.jira_issue_url);
 
-					System.out.print(issueId);
-					System.out.print(" >> ");
-					System.out.println(event);
-
 					// get issue from Jira
 					Issue issue = client.getIssueClient().getIssue(issueId).claim();
 
 					// get Jira issue status
 					String issueStatus = issue.getStatus().getName();
-					System.out.println("issue status: " + issueStatus);
 
 					// Jira updated date
 					DateTime jiraDate = issue.getUpdateDate();
@@ -126,37 +113,131 @@ public class JiraIntegrationFunction {
 					// OverOps updated date
 					DateTime overopsDate = getUpdateDate(args.serviceId, event.id, apiClient);
 
+					// TODO open a jira ticket for an API that lets me query for Jira / open / hidden ... to
+					// not time sync
+					// TODO resurfaced = deployment version needs to change <---
+
+					// TODO ensure Jira statuses are unique
+					// TODO make sure null, empty string, undefined all work
+
+					boolean isResolved = event.labels.contains("Resolved"); // is resolved in OverOps?
+					boolean isHidden = event.labels.contains("Archive"); // is hidden in OverOps?
+					boolean isInbox = event.labels.contains("Inbox"); // is in inbox in OverOps?
+					boolean isResurfaced = event.labels.contains("Resurfaced"); // is resurfaced in OverOps?
+
+					boolean isResolvedStatus = issueStatus.equals(input.resolvedStatus); // is resolved in Jira?
+					boolean isHiddenStatus = issueStatus.equals(input.hiddenStatus); // is hidden in Jira?
+					boolean isInboxStatus = issueStatus.equals(input.inboxStatus); // is in inbox in Jira?
+					boolean isResurfacedStatus = issueStatus.equals(input.resurfacedStatus); // is resurfaced in Jira?
+
 					// compare dates
-					System.out.print("last updated by: ");
 					if (jiraDate.isAfter(overopsDate)) {
-						// Jira
-						System.out.println("Jira");
+						// Sync Jira to OverOps
+
+						if (isResolvedStatus) {
+							// 1. resolve in Jira → resolve in OO
+
+							// if not resolved, resolve in OverOps
+							if (!isResolved) {
+								EventMarkResolvedRequest resolvedRequest = EventMarkResolvedRequest.newBuilder()
+										.setServiceId(args.serviceId).setEventId(event.id).build();
+
+								Response<EmptyResult> resolvedResponse = apiClient.post(resolvedRequest);
+
+								if (resolvedResponse.isBadResponse())
+									throw new IllegalStateException("Failed resolving event " + event.id);
+							}
+
+						} else if (isHiddenStatus) {
+							// 2. hide in Jira → hide in OO
+
+							// if not hidden, hide (delete/trash/archive) in OverOps
+							if (!isHidden) {
+								EventDeleteRequest hideRequest = EventDeleteRequest.newBuilder().setServiceId(args.serviceId)
+										.setEventId(event.id).build();
+
+								Response<EmptyResult> hideResponse = apiClient.post(hideRequest);
+
+								if (hideResponse.isBadResponse())
+									throw new IllegalStateException("Failed hiding event " + event.id);
+							}
+
+						} else {
+							// 3. anything else in Jira → move to inbox in OO
+
+							// if not in inbox, move to inbox in OverOps
+							if (!isInbox) {
+								EventInboxRequest inboxRequest = EventInboxRequest.newBuilder().setServiceId(args.serviceId)
+										.setEventId(event.id).build();
+
+								Response<EmptyResult> resolvedResponse = apiClient.post(inboxRequest);
+
+								if (resolvedResponse.isBadResponse())
+									throw new IllegalStateException("Failed moving event to inbox " + event.id);
+							}
+
+						}
+
 					} else {
-						// OverOps
-						System.out.println("OverOps");
+						// Sync OverOps to Jira
+						System.out.println("Sync OverOps → Jira");
+
+						// get possible status transitions
+						Iterable<Transition> transitions = client.getIssueClient().getTransitions(issue).claim();
+
+						if (isResolved) {
+							// 1. resolve in OO → resolve in Jira
+
+							// if not resolved, resolve in Jira
+							if (!isResolvedStatus) {
+								for (Transition transition : transitions) {
+									if (transition.getName().equals(input.resolvedStatus)) {
+										TransitionInput transitionInput = new TransitionInput(transition.getId());
+										client.getIssueClient().transition(issue, transitionInput).claim();
+										break;
+									}
+								}
+							}
+
+						} else if (isHidden) {
+							// 2. hide in OO → hide in Jira
+
+							// if not hidden, hide in Jira
+							if (!isHiddenStatus) {
+								for (Transition transition : transitions) {
+									if (transition.getName().equals(input.hiddenStatus)) {
+										TransitionInput transitionInput = new TransitionInput(transition.getId());
+										client.getIssueClient().transition(issue, transitionInput).claim();
+										break;
+									}
+								}
+							}
+
+						} else if (isResurfaced) {
+							// 3. resurfaced in OO → resurfaced in Jira
+
+							if (!isResurfacedStatus) {
+								for (Transition transition : transitions) {
+									if (transition.getName().equals(input.resurfacedStatus)) {
+										TransitionInput transitionInput = new TransitionInput(transition.getId());
+										client.getIssueClient().transition(issue, transitionInput).claim();
+										break;
+									}
+								}
+							}
+
+						} else {
+							// 4. anything else, mark "in Inbox" in Jira
+              for (Transition transition : transitions) {
+                if (transition.getName().equals(input.inboxStatus)) {
+                  TransitionInput transitionInput = new TransitionInput(transition.getId());
+                  client.getIssueClient().transition(issue, transitionInput).claim();
+                  break;
+                }
+              }
+						}
+
 					}
-
-					// maybe do more with event actions...
-
-					// TODO compare resolved / hidden / reopened
-					// TODO which statuses are required?
-					// if different, check dates
-					// switch (issueStatus) {
-					// 	case input.resolvedStatus: 
-
-					// }
-
-					// is resolved in Jira?
-					boolean isJiraResolved = issue.getStatus().getName().equals(input.resolvedStatus);
-					System.out.println("is resolved in Jira? " + isJiraResolved);
-
-					// is resolved in OverOps?
-					boolean isResolved = event.labels.contains("Resolved");
-					System.out.println("is resolved in OverOps? " + isResolved);
-
-					// is hidden in OverOps?
-					// is hidden in Jira?
-
 
 					// make it easier to read output
 					System.out.println();
@@ -165,8 +246,8 @@ public class JiraIntegrationFunction {
 			}
 
 		} catch (Exception e) {
-			// e.printStackTrace();
 			System.err.println("Caught exception. Check settings and try again.");
+			e.printStackTrace();
 			System.exit(1);
 		}
 
@@ -253,7 +334,13 @@ public class JiraIntegrationFunction {
 		public String jiraUsername;
 		public String jiraPassword;
 
+		public String inboxStatus;
 		public String resolvedStatus;
+		public String hiddenStatus;
+		public String resurfacedStatus;
+
+		// TODO
+		// public boolean handleSimilarEvents;
 
 		private JiraIntegrationInput(String raw) {
 			super(raw);
@@ -299,7 +386,10 @@ public class JiraIntegrationFunction {
 			"jiraURL=" + args[3],
 			"jiraUsername=" + args[4],
 			"jiraPassword=" + args[5],
-			"resolvedStatus=Done"
+			"resolvedStatus=Resolved",
+			"hiddenStatus=Closed",
+			"inboxStatus=To Do",
+			"resurfacedStatus=Reopened"
 		};
 
 		String rawContextArgs = new Gson().toJson(contextArgs);
