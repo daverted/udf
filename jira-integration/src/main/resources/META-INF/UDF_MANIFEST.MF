@@ -1,20 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <udf_manifest>
   <version>1.0.0</version>
-  <library_name>force-snapshot</library_name>
+  <library_name>sync-jira</library_name>
   <backwards_compatible>true</backwards_compatible>
   <functions>
     <function>
       <function_type>ANOMALY</function_type>
-      <function_name>Force Snapshot</function_name>
+      <function_name>Sync Jira</function_name>
       <description>
-        Force a snapshot the next time an event occurs for every event that has occurred in the last {timespan} minutes.
+        Sync the last {timespan} days worth of events with Jira.
       </description>
       <param_type>TEXT</param_type>
-      <class_file>com.overops.udf.snapshot.ForceSnapshotFunction</class_file>
+      <class_file>com.overops.udf.jira.JiraIntegrationFunction</class_file>
       <default_params>
-        # Get events from the last {timespan} minutes
-        timespan=5
+        # Sync events from the last {timespan} days
+        timespan=90
+
+        # Jira address and credentials
+        jiraURL=
+        jiraUsername=
+        jiraPassword=
+
+        # Jira status which corresponds to "Resolved" in OverOps
+        resolvedStatus=Resolved
+
+        # Jira status which corresponds to "Hidden" in OverOps
+        hiddenStatus=Closed
+
+        # Jira status which corresponds to "Inbox" in OverOps
+        inboxStatus=To Do
+
+        # Jira status which corresponds to "Resurfaced" in OverOps
+        resurfacedStatus=Reopened
       </default_params>
       <admin_function>true</admin_function>
     </function>
