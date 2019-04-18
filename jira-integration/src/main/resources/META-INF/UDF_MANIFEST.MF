@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <udf_manifest>
-  <version>1.0.0</version>
+  <version>1.0.2</version>
   <library_name>sync-jira</library_name>
   <backwards_compatible>true</backwards_compatible>
   <functions>
@@ -21,17 +21,20 @@
         jiraUsername=
         jiraPassword=
 
-        # Jira status which corresponds to "Resolved" in OverOps
+        # Jira status for "Resolved" in OverOps
         resolvedStatus=Resolved
 
-        # Jira status which corresponds to "Hidden" in OverOps
+        # Jira status for "Hidden" in OverOps
         hiddenStatus=Closed
 
-        # Jira status which corresponds to "Inbox" in OverOps
+        # Jira status for "Inbox" in OverOps
         inboxStatus=To Do
 
-        # Jira status which corresponds to "Resurfaced" in OverOps
+        # Jira status for "Resurfaced" in OverOps
         resurfacedStatus=Reopened
+
+        # Debugging
+        echoLogger=
       </default_params>
       <admin_function>true</admin_function>
     </function>
