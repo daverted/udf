@@ -4,7 +4,7 @@ subprojects {
 	apply plugin: 'eclipse'
 	
 	group = 'com.overops'
-	version = '1.0.0'
+	version = '1.0.2'
 	
 	repositories {
 		mavenCentral()
