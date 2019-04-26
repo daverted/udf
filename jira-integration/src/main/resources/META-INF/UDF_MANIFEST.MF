@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <udf_manifest>
-  <version>1.0.2</version>
+  <version>1.0.11</version>
   <library_name>sync-jira</library_name>
   <backwards_compatible>true</backwards_compatible>
   <functions>
