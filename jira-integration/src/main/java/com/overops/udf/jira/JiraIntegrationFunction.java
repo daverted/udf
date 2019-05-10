@@ -530,7 +530,7 @@ public class JiraIntegrationFunction {
 		ContextArgs contextArgs = new ContextArgs();
 
 		contextArgs.apiHost = "https://api.overops.com/";
-		contextArgs.apiKey = "fP5cAd73HOSpn8b5VJTznj5MUrxPXFW3jwzJq2++";
+		contextArgs.apiKey = "***REMOVED***";
 		contextArgs.serviceId = "S38358";
 
 		// Use "Jira UDF" View
