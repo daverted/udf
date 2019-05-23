@@ -8,13 +8,13 @@
       <function_type>ANOMALY</function_type>
       <function_name>Sync Jira</function_name>
       <description>
-        Sync the last {timespan} days worth of events with Jira.
+        Sync events with Jira.
       </description>
       <param_type>TEXT</param_type>
       <class_file>com.overops.udf.jira.JiraIntegrationFunction</class_file>
       <default_params>
         # Sync events from the last {timespan} days
-        timespan=90
+        days=30
 
         # Jira address and credentials
         jiraURL=
@@ -25,10 +25,7 @@
         resolvedStatus=Resolved
 
         # Jira status for "Hidden" in OverOps
-        hiddenStatus=Closed
-
-        # Jira status for "Inbox" in OverOps
-        inboxStatus=To Do
+        hiddenStatus=Won't Fix
 
         # Jira status for "Resurfaced" in OverOps
         resurfacedStatus=Reopened
