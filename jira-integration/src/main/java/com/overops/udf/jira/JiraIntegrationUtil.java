@@ -2,15 +2,11 @@ package com.overops.udf.jira;
 
 import java.util.List;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 import com.overops.udf.jira.JiraIntegrationFunction.JiraIntegrationInput;
 import com.takipi.api.client.ApiClient;
-import com.takipi.api.client.data.event.Action;
-import com.takipi.api.client.request.event.EventActionsRequest;
 import com.takipi.api.client.request.event.EventsRequest;
-import com.takipi.api.client.result.event.EventActionsResult;
 import com.takipi.api.client.result.event.EventResult;
 import com.takipi.api.client.result.event.EventsResult;
 import com.takipi.api.core.url.UrlClient.Response;
@@ -23,16 +19,16 @@ public class JiraIntegrationUtil {
 	public static JiraEventList fetch(ContextArgs args, JiraIntegrationInput input) {
 		ApiClient apiClient = args.apiClient();
 
-		LocalDateTime to = LocalDateTime.now();
-		LocalDateTime from = to.minusDays(input.days);
+		Instant to = Instant.now();
+		Instant from = to.minus(input.days, ChronoUnit.DAYS);
 
-		System.out.println("to: " + to.toInstant(ZoneOffset.UTC).toString());
-		System.out.println("from: " + from.toInstant(ZoneOffset.UTC).toString());
+		System.out.println("to: " + to);
+		System.out.println("from: " + from);
 		System.out.println("view id: " + args.viewId);
 
 		// get new events within the date range
 		EventsRequest eventsRequest = EventsRequest.newBuilder().setServiceId(args.serviceId).setViewId(args.viewId)
-				.setFrom(from.toInstant(ZoneOffset.UTC).toString()).setTo(to.toInstant(ZoneOffset.UTC).toString()).build();
+				.setFrom(from.toString()).setTo(to.toString()).build();
 
 		// GET events
 		Response<EventsResult> eventsResponse = apiClient.get(eventsRequest);
@@ -73,38 +69,6 @@ public class JiraIntegrationUtil {
 	private static String getJiraIssueId(String jiraURL) {
 		int index = jiraURL.lastIndexOf("/")+1;
 		return jiraURL.substring(index);
-	}
-
-	// get overops update date from last event action
-	public static Instant getEventDate(String eventId, ContextArgs args) {
-		ApiClient apiClient = args.apiClient();
-
-		EventActionsRequest eventActions = EventActionsRequest.newBuilder()
-			.setServiceId(args.serviceId).setEventId(eventId).build();
-
-		// GET event actions
-		Response<EventActionsResult> eventActionsResponse = apiClient.get(eventActions);
-
-		// validate API response
-		if (eventActionsResponse.isBadResponse())
-			throw new IllegalStateException("Failed getting event actions.");
-
-		// extract data
-		EventActionsResult eventActionsResult = eventActionsResponse.data;
-
-		// get list of event actions
-		List<Action> actions = eventActionsResult.event_actions;
-
-		Instant eventDate = null;
-
-		// get most recent event action timestamp
-		if (actions != null && actions.size() > 0) {
-			Action a = actions.get(0);
-			eventDate = Instant.parse(a.timestamp);
-		}
-
-		// can be null
-		return eventDate;
 	}
 
 }

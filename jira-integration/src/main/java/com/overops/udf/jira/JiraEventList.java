@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.atlassian.jira.rest.client.JiraRestClient;
-import com.atlassian.jira.rest.client.domain.Issue;
+import com.atlassian.jira.rest.client.domain.SearchResult;
 import com.overops.udf.jira.JiraEvent.Status;
 import com.overops.udf.jira.JiraIntegrationFunction.JiraIntegrationInput;
 import com.takipi.api.client.request.label.BatchModifyLabelsRequest;
@@ -27,10 +27,10 @@ public class JiraEventList {
 
 	public void addEvent(String issueId, EventResult event) {
 		if (this.eventList.containsKey(issueId)) {
-			this.eventList.get(issueId).addEvent(issueId, event);
+			this.eventList.get(issueId).addEvent(event);
 		} else {
-			JiraEvent jiraEvent = new JiraEvent(input, args);
-			jiraEvent.addEvent(issueId, event);
+			JiraEvent jiraEvent = new JiraEvent(input);
+			jiraEvent.addEvent(event);
 			this.eventList.put(issueId, jiraEvent);
 		}
 	}
@@ -41,15 +41,42 @@ public class JiraEventList {
 
 	public void populate(JiraRestClient client) {
 		// populate Jira data
-		for (String key : eventList.keySet()) {
-			Issue issue = client.getIssueClient().getIssue(key).claim();
-			eventList.get(key).setIssue(issue);
+
+		StringBuilder jqlSb = new StringBuilder(" AND issuekey in (");
+
+		if (eventList.size() < 1) {
+			System.out.println("Event list is empty.");
+			return;
 		}
+
+		for (String key : eventList.keySet()) {
+			jqlSb.append(key);
+			jqlSb.append(", ");
+		}
+
+		// remove final ", " and close )
+		String jql = jqlSb.toString();
+		jql = jql.substring(0, jql.length() - 2) + ")";
+
+		String resolvedJql = "status = " + input.resolvedStatus + jql;
+		String hiddenJql = "status = " + input.hiddenStatus + jql;
+
+		System.out.println("resolvedJql: " + resolvedJql);
+		System.out.println("hiddenJql: " + hiddenJql);
+
+		SearchResult resolved = client.getSearchClient().searchJql(resolvedJql, 1000, 0).claim();
+		resolved.getIssues().forEach((basicIssue) -> {
+			eventList.get(basicIssue.getKey()).setIssueStatus(input.resolvedStatus);
+		});
+
+		SearchResult hidden = client.getSearchClient().searchJql(hiddenJql, 1000, 0).claim();
+		hidden.getIssues().forEach((basicIssue) -> {
+			eventList.get(basicIssue.getKey()).setIssueStatus(input.hiddenStatus);
+		});
 	}
 
 	public void sync() {
 		Builder batchBuilder = BatchModifyLabelsRequest.newBuilder().setServiceId(args.serviceId);
-		ArrayList<JiraEvent> resurfacedEvents = new ArrayList<JiraEvent>();
 
 		// for each JiraEvent:
 		System.out.println("syncing " + eventList.size() + " issues");
@@ -58,10 +85,6 @@ public class JiraEventList {
 			jiraEvent.getEvents().forEach(eventResult -> {
 				Status eventStatus = JiraEvent.status(eventResult);
 				if (issueStatus != eventStatus) {
-					if (eventStatus == Status.RESURFACED) {
-						System.out.println("resurfaced event: " + jiraEvent);
-					}
-
 					System.out.println(">> update event! (" + eventResult.id + ") issueStatus: " + issueStatus + " eventStatus: " + eventStatus);
 
 					List<String> addLabels = new LinkedList<String>();
@@ -75,32 +98,9 @@ public class JiraEventList {
 			});
 		});
 
-		// TODO resurfaced = deployment version needs to change <---
-
-		// 	// get possible status transitions
-		// 	Iterable<Transition> transitions = client.getIssueClient().getTransitions(issue).claim();
-
-		// 	} else if (isResurfaced) {
-		// 		// 3. resurfaced in OO → resurfaced in Jira
-		// 		System.out.print(" Resurfaced in OverOps");
-
-		// 		if (!isResurfacedStatus) {
-		// 			System.out.print(" NOT Resurfaced in Jira. Resurfacing...");
-		// 			for (Transition transition : transitions) {
-		// 				if (transition.getName().equals(input.resurfacedStatus)) {
-		// 					TransitionInput transitionInput = new TransitionInput(transition.getId());
-		// 					client.getIssueClient().transition(issue, transitionInput).claim();
-		// 					break;
-		// 				}
-		// 			}
-		// 		}
-
-
 		try {
-			System.out.println("sync (dry run)");
-			// temporarily commented out for testing
-			// args.apiClient().post(batchBuilder.setHandleSimilarEvents(true).build());
-			//
+			// post batch label change request
+			args.apiClient().post(batchBuilder.setHandleSimilarEvents(false).build());
 		} catch (IllegalArgumentException ex) {
 			// this is normal - it happens when there are no modifications to be made
 			System.out.println(ex.getMessage());

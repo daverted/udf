@@ -93,9 +93,6 @@ public class JiraIntegrationFunction {
 		if (input.hiddenStatus == null || input.hiddenStatus.isEmpty())
 			throw new IllegalArgumentException("'hiddenStatus' is required");
 
-		if (input.resurfacedStatus == null || input.resurfacedStatus.isEmpty())
-			throw new IllegalArgumentException("'resurfacedStatus' is required");
-
 		return input;
 	}
 
@@ -108,7 +105,6 @@ public class JiraIntegrationFunction {
 
 		public String resolvedStatus;
 		public String hiddenStatus;
-		public String resurfacedStatus;
 
 		private JiraIntegrationInput(String raw) {
 			super(raw);
@@ -141,10 +137,10 @@ public class JiraIntegrationFunction {
 	public static void main(String[] args) {
 		Instant start = Instant.now(); // timer
 
-		if ((args == null) || (args.length < 10))
+		if ((args == null) || (args.length < 9))
 			throw new IllegalArgumentException(
 				"java JiraIntegrationFunction API_URL API_KEY SERVICE_ID JIRA_URL JIRA_USER JIRA_PASS " + 
-				"DAYS RESOLVED_STATUS HIDDEN_STATUS RESURFACED_STATUS");
+				"DAYS RESOLVED_STATUS HIDDEN_STATUS");
 
 		ContextArgs contextArgs = new ContextArgs();
 
@@ -163,8 +159,7 @@ public class JiraIntegrationFunction {
 			"jiraPassword=" + args[5],
 			"days=" + args[6], // 14
 			"resolvedStatus=" + args[7], // Resolved
-			"hiddenStatus=" + args[8], // Won't Fix, Closed
-			"resurfacedStatus=" + args[9] // Reopened
+			"hiddenStatus=" + args[8] // Won't Fix, Closed
 		};
 
 		String rawContextArgs = new Gson().toJson(contextArgs);
