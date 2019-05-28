@@ -3,18 +3,14 @@ package com.overops.udf.jira;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.overops.udf.jira.JiraIntegrationFunction.JiraIntegrationInput;
 import com.takipi.api.client.result.event.EventResult;
 
 public class JiraEvent {
-	private JiraIntegrationInput input;
-
-	private Status issueStatus; // jira status
-
-	private List<EventResult> events; // overops events
+	public Status issueStatus; // jira status
+	public List<EventResult> events; // overops events
 
 	// possible statuses
-	enum Status {
+	public enum Status {
 		RESOLVED("Resolved"),
 		HIDDEN("Archive"),
 		INBOX("Inbox");
@@ -30,32 +26,10 @@ public class JiraEvent {
 		}
 	}
 
-	public JiraEvent(JiraIntegrationInput input) {
-		this.events = new ArrayList<EventResult>();
-		this.input = input;
+	public JiraEvent(EventResult event) {
+		this.events = new ArrayList<EventResult>(5);
 		this.issueStatus = Status.INBOX; // defaults to inbox
-	}
-
-	public void addEvent(EventResult event) {
 		events.add(event);
-	}
-
-	public List<EventResult> getEvents() {
-		return events;
-	}
-
-	public void setIssueStatus(String issueStatusName) {
-		if (issueStatusName.equals(input.resolvedStatus)) {
-			issueStatus = Status.RESOLVED;
-		} else if (issueStatusName.equals(input.hiddenStatus)) {
-			issueStatus = Status.HIDDEN;
-		} else {
-			issueStatus = Status.INBOX;
-		}
-	}
-
-	public Status getIssueStatus() {
-		return issueStatus;
 	}
 
 	public static Status status(EventResult event) {
@@ -68,9 +42,9 @@ public class JiraEvent {
 	@Override
 	public String toString() {
 		return "{" +
-			" issueStatus=" + getIssueStatus() + ", " +
-			" events=" + getEvents() +
-			"}";
+			" issueStatus=" + issueStatus + ", " +
+			" events=" + events +
+			"}\n";
 	}
 
 }
