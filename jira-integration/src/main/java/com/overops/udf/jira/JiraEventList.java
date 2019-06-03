@@ -23,12 +23,19 @@ public class JiraEventList {
 	private ContextArgs args;
 
 	public JiraEventList(JiraIntegrationInput input, ContextArgs args) {
-		this.eventList = new HashMap<String, JiraEvent>(1400);
+		this.eventList = new HashMap<String, JiraEvent>(1000);
 		this.input = input;
 		this.args = args;
 	}
 
 	public void addEvent(String issueId, EventResult event) {
+		// JQL limit is 1000 issues per query
+		if (eventList.size() >= 1000) {
+			System.out.println("reached max Jira issues (1000)");
+			return;
+		}
+
+		// Jira ID maps to multiple OO event IDs
 		if (eventList.containsKey(issueId)) {
 			eventList.get(issueId).events.add(event);
 		} else {
@@ -54,10 +61,6 @@ public class JiraEventList {
 			return;
 		}
 
-		System.out.println("(jira event list) jiraEvents:");
-		System.out.println(this);
-		System.out.println();
-
 		StringBuilder updateKeys = new StringBuilder("issuekey in (");
 		for (String key : eventList.keySet()) {
 			updateKeys.append(key);
@@ -70,17 +73,23 @@ public class JiraEventList {
 
 		SearchResult updateKeysResult = client.getSearchClient().searchJql(updateKeysStr, 1000, 0).claim();
 
+		// create a copy of the key set
 		Set<String> keys = new HashSet<String>();
 		keys.addAll(eventList.keySet());
 
-		HashMap<String, JiraEvent> tempList = new HashMap<String, JiraEvent>();
-
+		// remove each issue that's in the key set
 		updateKeysResult.getIssues().forEach((issue) -> {
 			String key = issue.getKey();
 			keys.remove(key);
 		});
 
+		// System.out.println("keys to be updated:");
+		// System.out.println(keys);
+
+		// the remaining keys have changed - query each to update
 		if (!keys.isEmpty()) {
+			HashMap<String, JiraEvent> tempList = new HashMap<String, JiraEvent>(keys.size());
+
 			keys.forEach((key) -> {
 				Issue issue = client.getIssueClient().getIssue(key).claim();
 				String issueKey = issue.getKey();
@@ -88,12 +97,14 @@ public class JiraEventList {
 				JiraEvent event = eventList.get(key);
 				tempList.put(issueKey, event);
 			});
+
+			// update event list w/ new issue IDs
 			eventList.keySet().removeAll(keys);
 			eventList.putAll(tempList);
 		}
 
-		System.out.println(">>> updated eventList: ");
-		System.out.println(eventList);
+		// System.out.println(">>> updated eventList: ");
+		// System.out.println(eventList);
 
 		StringBuilder jqlHidden = new StringBuilder("status = \"");
 		jqlHidden.append(input.hiddenStatus);
@@ -108,10 +119,16 @@ public class JiraEventList {
 		String jqlHiddenStr = jqlHidden.toString();
 		jqlHiddenStr = jqlHiddenStr.substring(0, jqlHiddenStr.length() - 2) + ")";
 
-		// remove hidden from list, then search for resolved
-		Set<String> unknownKeys = eventList.keySet();
+		// System.out.println("jql hidden: ");
+		// System.out.println(jqlHiddenStr);
 
+		// create a copy of the key set
+		Set<String> unknownKeys = new HashSet<String>();
+		unknownKeys.addAll(eventList.keySet());
+
+		// remove hidden from list, then search for resolved
 		SearchResult hidden = client.getSearchClient().searchJql(jqlHiddenStr, 1000, 0).claim();
+
 		hidden.getIssues().forEach((basicIssue) -> {
 			String key = basicIssue.getKey();
 			eventList.get(key).issueStatus = Status.HIDDEN;
@@ -121,6 +138,8 @@ public class JiraEventList {
 		if (unknownKeys.size() < 1) {
 			return;
 		}
+
+		////
 
 		StringBuilder jqlResolved = new StringBuilder("status = \"");
 		jqlResolved.append(input.resolvedStatus);
@@ -167,10 +186,7 @@ public class JiraEventList {
 
 		try {
 			// post batch label change request
-			// 
-			// args.apiClient().post(batchBuilder.setHandleSimilarEvents(false).build());
-			//
-			System.out.println("dry run");
+			args.apiClient().post(batchBuilder.setHandleSimilarEvents(false).build());
 		} catch (IllegalArgumentException ex) {
 			// this is normal - it happens when there are no modifications to be made
 			System.out.println(ex.getMessage());

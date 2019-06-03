@@ -37,9 +37,9 @@ public class JiraIntegrationFunction {
 		JiraIntegrationInput input = getJiraIntegrationInput(rawInput);
 		ContextArgs args = (new Gson()).fromJson(rawContextArgs, ContextArgs.class);
 
-		if (!args.validate()) {
+		if (!args.validate())
 			throw new IllegalArgumentException("Bad context args: " + rawContextArgs);
-		}
+
 
 		System.out.println(String.format("Logging in to %s with username '%s'", input.jiraURL, input.jiraUsername));
 
@@ -47,7 +47,6 @@ public class JiraIntegrationFunction {
 		URI uri;
 
 		try {
-
 			uri = new URI(input.jiraURL);
 
 			// Construct the JRJC client
@@ -58,10 +57,6 @@ public class JiraIntegrationFunction {
 
 			// sync with Jira
 			jiraEvents.sync(client);
-
-			System.out.println("(jira integration fn) jiraEvents:");
-			System.out.println(jiraEvents);
-			System.out.println();
 
 		} catch (URISyntaxException e) {
 			System.out.println("Caught URISyntaxException. Check jiraURL and try again.");
