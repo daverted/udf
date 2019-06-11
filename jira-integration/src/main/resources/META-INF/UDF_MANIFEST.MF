@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <udf_manifest>
-  <version>1.0.12</version>
+  <version>1.2.0</version>
   <library_name>sync-jira</library_name>
   <backwards_compatible>true</backwards_compatible>
   <functions>
@@ -26,9 +26,6 @@
 
         # Jira status for "Hidden" in OverOps
         hiddenStatus=Won't Fix
-
-        # Jira status for "Resurfaced" in OverOps
-        resurfacedStatus=Reopened
       </default_params>
       <admin_function>true</admin_function>
     </function>
