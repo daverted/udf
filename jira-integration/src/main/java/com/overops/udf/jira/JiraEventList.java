@@ -55,13 +55,13 @@ public class JiraEventList {
 
 	// populate Jira data
 	private void populate(JiraRestClient client) {
-
 		if (eventList.size() < 1) {
 			System.out.println("Event list is empty.");
 			return;
 		}
 
 		StringBuilder updateKeys = new StringBuilder("issuekey in (");
+
 		for (String key : eventList.keySet()) {
 			updateKeys.append(key);
 			updateKeys.append(", ");
@@ -159,7 +159,6 @@ public class JiraEventList {
 			String key = basicIssue.getKey();
 			eventList.get(key).issueStatus = Status.RESOLVED;
 		});
-
 	}
 
 	private void syncBatch() {
@@ -167,11 +166,14 @@ public class JiraEventList {
 
 		// for each JiraEvent:
 		System.out.println("syncing " + eventList.size() + " issues");
+
 		eventList.forEach((issueId, jiraEvent) -> {
 			jiraEvent.events.forEach(eventResult -> {
 				Status eventStatus = JiraEvent.status(eventResult);
+
 				if (jiraEvent.issueStatus != eventStatus) {
-					System.out.println(">> update event! (" + eventResult.id + ") issueStatus: " + jiraEvent.issueStatus + " eventStatus: " + eventStatus);
+					System.out.println(">> update event! (" + eventResult.id + ") issueStatus: " + jiraEvent.issueStatus
+							+ " eventStatus: " + eventStatus);
 
 					List<String> addLabels = new LinkedList<String>();
 					addLabels.add(jiraEvent.issueStatus.getLabel());
@@ -195,9 +197,6 @@ public class JiraEventList {
 
 	@Override
 	public String toString() {
-		return "{" +
-			" eventList='" + getEventList() + "'" +
-			"}\n";
+		return "{" + " eventList='" + getEventList() + "'" + "}\n";
 	}
-
 }

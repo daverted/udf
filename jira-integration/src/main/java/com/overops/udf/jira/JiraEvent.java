@@ -10,12 +10,13 @@ public class JiraEvent {
 	public List<EventResult> events; // overops events
 
 	// possible statuses
+	//
 	public enum Status {
 		RESOLVED("Resolved"),
 		HIDDEN("Archive"),
 		INBOX("Inbox");
 
-		private String label;
+		private final String label;
 
 		public String getLabel() {
 			return label;
@@ -32,19 +33,21 @@ public class JiraEvent {
 		events.add(event);
 	}
 
+	@Override
+	public String toString() {
+		return "{" + " issueStatus=" + issueStatus + ", " + " events=" + events + "}\n";
+	}
+
 	public static Status status(EventResult event) {
-		if (event.labels.contains("Resolved")) return Status.RESOLVED;
-		if (event.labels.contains("Archive")) return Status.HIDDEN;
+		if (event.labels.contains("Resolved")) {
+			return Status.RESOLVED;
+		}
+
+		if (event.labels.contains("Archive")) {
+			return Status.HIDDEN;
+		}
+
 		// if (event.labels.contains("Inbox")) return Status.INBOX; // default is inbox
 		return Status.INBOX;
 	}
-
-	@Override
-	public String toString() {
-		return "{" +
-			" issueStatus=" + issueStatus + ", " +
-			" events=" + events +
-			"}\n";
-	}
-
 }
