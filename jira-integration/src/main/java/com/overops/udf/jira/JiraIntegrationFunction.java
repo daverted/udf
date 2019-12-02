@@ -228,22 +228,22 @@ public class JiraIntegrationFunction {
 	public static void main(String[] args) {
 		Instant start = Instant.now(); // timer
 
-		if ((args == null) || (args.length < 9))
+		if ((args == null) || (args.length < 10))
 			throw new IllegalArgumentException(
 					"java JiraIntegrationFunction API_URL API_KEY SERVICE_ID JIRA_URL JIRA_USER JIRA_PASS "
-							+ "DAYS RESOLVED_STATUS HIDDEN_STATUS");
+							+ "DAYS RESOLVED_STATUS HIDDEN_STATUS VIEW_NAME");
 
 		// Use "Jira UDF" view for testing
-		String rawContextArgs = TestUtil.getViewContextArgs(args, "Jira UDF");
+		String rawContextArgs = TestUtil.getViewContextArgs(args, args[9]);
 
 		// some test values
 		String[] sampleValues = new String[] {
 				"jiraURL=" + args[3],
 				"jiraUsername=" + args[4],
 				"jiraToken=" + args[5],
-				"days=" + args[6],				// 14
+				"days=" + args[6],	// 14
 				"resolvedStatus=" + args[7],	// Resolved
-				"hiddenStatus=" + args[8]		// Won't Fix, Closed
+				"hiddenStatus=" + args[8]	// Won't Fix, Closed
 		};
 
 		try {
