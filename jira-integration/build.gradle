@@ -33,7 +33,7 @@ fatJar {
   exclude 'META-INF/maven'
   exclude 'META-INF/*.example'
   manifest {
-    attributes 'Main-Class': 'JiraIntegration'
+    attributes 'Main-Class': 'com.overops.udf.jira.JiraIntegrationFunction'
   }
 }
 
