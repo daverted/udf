@@ -116,10 +116,11 @@ public class JiraEventList {
 		// INTG-200: syncing hidden is optional
 		if (!StringUtils.isEmpty(input.hiddenStatus)) {
 
-			System.out.println(">>> Syncing Hidden / Jira status = " + input.hiddenStatus);
+			System.out.println(">>> Syncing Hidden / Jira " + input.resolutionOrStatus + " = " + input.hiddenStatus);
 
 			// search for hidden issues
-			StringBuilder jqlHidden = new StringBuilder("status = \"");
+			StringBuilder jqlHidden = new StringBuilder(input.resolutionOrStatus);
+			jqlHidden.append(" = \"");
 			jqlHidden.append(input.hiddenStatus);
 			jqlHidden.append("\" AND issuekey in (");
 
@@ -157,10 +158,11 @@ public class JiraEventList {
 		// INTG-200: syncing resolved is optional
 		if (!StringUtils.isEmpty(input.resolvedStatus)) {
 
-			System.out.println(">>> Syncing Resolved / Jira status = " + input.resolvedStatus);
+			System.out.println(">>> Syncing Resolved / Jira " + input.resolutionOrStatus + " = " + input.resolvedStatus);
 
 			// search for resolved issues
-			StringBuilder jqlResolved = new StringBuilder("status = \"");
+			StringBuilder jqlResolved = new StringBuilder(input.resolutionOrStatus);
+			jqlResolved.append(" = \"");
 			jqlResolved.append(input.resolvedStatus);
 			jqlResolved.append("\" AND issuekey in (");
 

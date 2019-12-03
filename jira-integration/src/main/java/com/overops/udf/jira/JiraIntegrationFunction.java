@@ -29,6 +29,11 @@ public class JiraIntegrationFunction {
 	public static String validateInput(String rawInput) {
 		JiraIntegrationInput input = getJiraIntegrationInput(rawInput);
 
+		// INTG-203: sync either 'resolution' or 'status' field
+		if (!input.resolutionOrStatus.equals("resolution") && !input.resolutionOrStatus.equals("status")) {
+			throw new IllegalArgumentException("'resolutionOrStatus' must be 'resolution' or 'status'");
+		}
+
 		// INTG-200: at least one (resolved, hidden) is required.
 		if (StringUtils.isEmpty(input.resolvedStatus) && StringUtils.isEmpty(input.hiddenStatus)) {
 			throw new IllegalArgumentException("'resolvedStatus' or 'hiddenStatus' is required");
@@ -49,13 +54,13 @@ public class JiraIntegrationFunction {
 
 			// INTG-200: resolved status must exist in Jira.
 			if (!StringUtils.isEmpty(input.resolvedStatus)) {
-				client.getSearchClient().searchJql("status = \""+ input.resolvedStatus +"\"", 1, 0).claim();
+				client.getSearchClient().searchJql(input.resolutionOrStatus + " = \""+ input.resolvedStatus +"\"", 1, 0).claim();
 				System.out.println(">> verified input.resolveStatus");
 			}
 
 			// INTG-200: hidden status must exist in Jira.
 			if (!StringUtils.isEmpty(input.hiddenStatus)) {
-				client.getSearchClient().searchJql("status = \""+ input.hiddenStatus +"\"", 1, 0).claim();
+				client.getSearchClient().searchJql(input.resolutionOrStatus + " = \""+ input.hiddenStatus +"\"", 1, 0).claim();
 				System.out.println(">> verified input.hiddenStatus");
 			}
 
@@ -226,6 +231,7 @@ public class JiraIntegrationFunction {
 		public String jiraUsername;
 		public String jiraToken;
 
+		public String resolutionOrStatus; // INTG-203
 		public String resolvedStatus;
 		public String hiddenStatus;
 
