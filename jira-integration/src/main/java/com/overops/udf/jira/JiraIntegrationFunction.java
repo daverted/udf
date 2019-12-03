@@ -29,6 +29,11 @@ public class JiraIntegrationFunction {
 	public static String validateInput(String rawInput) {
 		JiraIntegrationInput input = getJiraIntegrationInput(rawInput);
 
+		// INTG-200: at least one (resolved, hidden) is required.
+		if (StringUtils.isEmpty(input.resolvedStatus) && StringUtils.isEmpty(input.hiddenStatus)) {
+			throw new IllegalArgumentException("'resolvedStatus' or 'hiddenStatus' is required");
+		}
+
 		// validate credentials by logging in
 		JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
 
@@ -41,13 +46,41 @@ public class JiraIntegrationFunction {
 			JiraRestClient client = factory.createWithBasicHttpAuthentication(uri, input.jiraUsername, input.jiraToken);
 
 			// Make the client log in by performing a search
-			client.getSearchClient().searchJql("").claim();
+
+			// INTG-200: resolved status must exist in Jira.
+			if (!StringUtils.isEmpty(input.resolvedStatus)) {
+				client.getSearchClient().searchJql("status = \""+ input.resolvedStatus +"\"", 1, 0).claim();
+				System.out.println(">> verified input.resolveStatus");
+			}
+
+			// INTG-200: hidden status must exist in Jira.
+			if (!StringUtils.isEmpty(input.hiddenStatus)) {
+				client.getSearchClient().searchJql("status = \""+ input.hiddenStatus +"\"", 1, 0).claim();
+				System.out.println(">> verified input.hiddenStatus");
+			}
+
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException("Invalid URL. Check jiraURL and try again");
+		// } catch (RestClientException restEx) {
+
+		// 	throw new IllegalArgumentException(restEx.getMessage());
 		} catch (Exception e) {
-			// invalid credentials results in org.codehaus.jettison.json.JSONException in
-			// JiraClient
-			throw new IllegalArgumentException("Invalid credentials. Unable to authenticate with Jira.");
+			// invalid credentials results in org.codehaus.jettison.json.JSONException in JiraClient
+			// exception message is HTML
+			if (e.getMessage().contains("AUTHENTICATED_FAILED")) {
+				// failed = invalid username / password
+				throw new IllegalArgumentException("Authentication failed.");
+			} else if (e.getMessage().contains("AUTHENTICATION_DENIED")) {
+				// denied = failed CAPTHCA challenge
+				throw new IllegalArgumentException("Authentication denied. Please disable Jira CAPTCHA challenge.");
+			} else {
+				// log other errors
+				System.out.println("---- JIRA UDF VALIDATION EXCEPTION: ----");
+				System.out.println(e.getMessage());
+				System.out.println("----------------------------------------");
+
+				throw new IllegalArgumentException(e.getMessage());
+			}
 		}
 
 		return input.toString();
@@ -83,14 +116,6 @@ public class JiraIntegrationFunction {
 
 		if (StringUtils.isEmpty(input.jiraToken)) {
 			throw new IllegalArgumentException("'jiraToken' is required");
-		}
-
-		if (StringUtils.isEmpty(input.resolvedStatus)) {
-			throw new IllegalArgumentException("'resolvedStatus' is required");
-		}
-
-		if (StringUtils.isEmpty(input.hiddenStatus)) {
-			throw new IllegalArgumentException("'hiddenStatus' is required");
 		}
 
 		return input;
@@ -233,7 +258,6 @@ public class JiraIntegrationFunction {
 					"java JiraIntegrationFunction API_URL API_KEY SERVICE_ID JIRA_URL JIRA_USER JIRA_PASS "
 							+ "DAYS RESOLVED_STATUS HIDDEN_STATUS VIEW_NAME");
 
-		// Use "Jira UDF" view for testing
 		String rawContextArgs = TestUtil.getViewContextArgs(args, args[9]);
 
 		// some test values
