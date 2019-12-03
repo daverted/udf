@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <udf_manifest>
-  <version>1.3.0</version>
+  <version>1.3.5</version>
   <library_name>sync-jira</library_name>
   <backwards_compatible>true</backwards_compatible>
   <functions>
@@ -24,10 +24,10 @@
         # For self-hosted Jira, use password.
         jiraToken=
 
-        # Jira status for "Resolved" in OverOps
+        # Jira status for "Resolved" in OverOps. Leave blank to disable.
         resolvedStatus=Resolved
 
-        # Jira status for "Hidden" in OverOps
+        # Jira status for "Hidden" in OverOps. Leave blank to disable.
         hiddenStatus=Won't Fix
       </default_params>
       <admin_function>true</admin_function>
