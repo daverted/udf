@@ -332,6 +332,7 @@ In addition to your custom functions and their dependencies, the jar file upload
         timespan=5
       </default_params>
       <admin_function>true</admin_function>
+      <silent>false</silent>
     </function>
     <function>
       <function_type>CHANNEL</function_type>
@@ -345,6 +346,7 @@ In addition to your custom functions and their dependencies, the jar file upload
         # Label to apply to events
         label=Hello_World
       </default_params>
+      <silent>false</silent>
     </function>
   </functions>
 </udf_manifest>
@@ -373,6 +375,8 @@ The `functions` field contains individual `function` entries for each UDF in you
 * `admin_function`
   * hides the function from the dropdown menu if not an admin
   * this is not a security feature, it's only a way to avoid clutter in the UI
+* `silent`
+  * Should be used to mark whether the UDF needs to trigger alerts or not. 'false' by default. When set to 'true' the UDF can run without enabling any alert 
 
 *Tip: You may use the same `class_file` with a different `function_name` and `default_params` to produce multiple UDFs from the same class.*
 
