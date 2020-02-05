@@ -380,6 +380,8 @@ The `functions` field contains individual `function` entries for each UDF in you
 
 *Tip: You may use the same `class_file` with a different `function_name` and `default_params` to produce multiple UDFs from the same class.*
 
+*Note: The default_params value are set within the function’s library manifest entry. Unless specified, all the parameters specified in the Params section are mandatory. The validation checks that are applied to the Params in the function validate method mean that a missing parameter value will result in a failed validation (by throwing a “Missing <PARAM_NAME> parameter”). The validation result should be a user-friendly description of the validated function.
+
 ## Deleting UDFs
 
 
