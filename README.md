@@ -93,7 +93,7 @@ Every UDF must have two methods: `validateInput` and `execute`.
 
 ### `validateInput`
 
-The `validateInput` method takes a the string `rawInput`, representing parameters, and returns a string if the parameters are valid. For anomaly functions, this valid string is displayed in the UI.
+The `validateInput` method takes a the string `rawInput`, representing parameters, and returns a string if the parameters are valid. For anomaly functions, this valid string is displayed in the UI. The valid string should be a user-friendly description of the validated function.
 
 ```java
 public static String validateInput(String rawInput) {
@@ -379,6 +379,8 @@ The `functions` field contains individual `function` entries for each UDF in you
   * Should be used to mark whether the UDF needs to trigger alerts or not. 'false' by default. When set to 'true' the UDF can run without enabling any alert 
 
 *Tip: You may use the same `class_file` with a different `function_name` and `default_params` to produce multiple UDFs from the same class.*
+
+*Note: Unless specified, all the parameters listed above are mandatory. A missing parameter value will result in a failed validation by throwing a "Missing <PARAM_NAME> parameter".*
 
 ## Deleting UDFs
 
