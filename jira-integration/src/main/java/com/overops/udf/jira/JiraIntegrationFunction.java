@@ -9,8 +9,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.atlassian.jira.rest.client.JiraRestClient;
-import com.atlassian.jira.rest.client.JiraRestClientFactory;
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
@@ -54,13 +54,13 @@ public class JiraIntegrationFunction {
 
 			// INTG-200: resolved status must exist in Jira.
 			if (!StringUtils.isEmpty(input.resolvedStatus)) {
-				client.getSearchClient().searchJql(input.resolutionOrStatus + " = \""+ input.resolvedStatus +"\"", 1, 0).claim();
+				client.getSearchClient().searchJql(input.resolutionOrStatus + " = \""+ input.resolvedStatus +"\"", 1, 0, null).claim();
 				System.out.println(">> verified input.resolveStatus");
 			}
 
 			// INTG-200: hidden status must exist in Jira.
 			if (!StringUtils.isEmpty(input.hiddenStatus)) {
-				client.getSearchClient().searchJql(input.resolutionOrStatus + " = \""+ input.hiddenStatus +"\"", 1, 0).claim();
+				client.getSearchClient().searchJql(input.resolutionOrStatus + " = \""+ input.hiddenStatus +"\"", 1, 0, null).claim();
 				System.out.println(">> verified input.hiddenStatus");
 			}
 
@@ -262,7 +262,7 @@ public class JiraIntegrationFunction {
 		if ((args == null) || (args.length < 10))
 			throw new IllegalArgumentException(
 					"java JiraIntegrationFunction API_URL API_KEY SERVICE_ID JIRA_URL JIRA_USER JIRA_PASS "
-							+ "DAYS RESOLVED_STATUS HIDDEN_STATUS VIEW_NAME");
+							+ "DAYS RESOLVED_STATUS HIDDEN_STATUS VIEW_NAME RESOLUTION_OR_STATUS");
 
 		String rawContextArgs = TestUtil.getViewContextArgs(args, args[9]);
 
@@ -273,7 +273,8 @@ public class JiraIntegrationFunction {
 				"jiraToken=" + args[5],
 				"days=" + args[6],	// 14
 				"resolvedStatus=" + args[7],	// Resolved
-				"hiddenStatus=" + args[8]	// Won't Fix, Closed
+				"hiddenStatus=" + args[8],	// Won't Fix, Closed
+				"resolutionOrStatus=" + args[10] // 'resolution' or 'status'
 		};
 
 		try {

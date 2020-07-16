@@ -7,7 +7,10 @@ buildscript {
     jcenter()
     mavenLocal()
     maven {
-      url 'https://packages.atlassian.com/maven/repository/public'
+      url 'https://packages.atlassian.com/content/repositories/atlassian-public/'
+    }
+    maven {
+      url 'https://repo.spring.io/plugins-release/'
     }
   }
 
@@ -19,10 +22,12 @@ buildscript {
 dependencies {
   compile (
     "org.apache.commons:commons-lang3:3.7",
-    "com.takipi:api-client:2.11.0",
-    "com.takipi:api-client-util:2.11.0",
+    "com.takipi:api-client:2.34.1",
+    "com.takipi:api-client-util:2.34.1",
     "com.takipi:overops-functions:2.0.0",
-    "com.atlassian.jira:jira-rest-java-client:2.0.0-m2",
+    "com.atlassian.jira:jira-rest-java-client-api:5.2.0",
+    "com.atlassian.jira:jira-rest-java-client-core:5.2.0",
+    "io.atlassian.fugue:fugue:4.7.2",
     "com.amazonaws:aws-java-sdk-lambda:1.11.539",
     "com.amazonaws:aws-lambda-java-core:1.2.0"
     // "org.slf4j:slf4j-simple:1.6.2"
