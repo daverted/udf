@@ -9,9 +9,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.atlassian.jira.rest.client.JiraRestClient;
-import com.atlassian.jira.rest.client.domain.Issue;
-import com.atlassian.jira.rest.client.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.overops.udf.jira.JiraEvent.Status;
 import com.overops.udf.jira.JiraIntegrationFunction.JiraIntegrationInput;
 import com.takipi.api.client.request.label.BatchModifyLabelsRequest;
@@ -74,7 +74,7 @@ public class JiraEventList {
 		updateKeysStr = updateKeys.substring(0, updateKeys.length() - 2) + ")";
 
 		// queries for all Jira issue keys so we can compare for changes
-		SearchResult updateKeysResult = client.getSearchClient().searchJql(updateKeysStr, 1000, 0).claim();
+		SearchResult updateKeysResult = client.getSearchClient().searchJql(updateKeysStr, 1000, 0, null).claim();
 
 		// create a copy of the key set
 		Set<String> keys = new HashSet<String>();
@@ -137,7 +137,7 @@ public class JiraEventList {
 			System.out.println(jqlHiddenStr);
 
 			// get hidden Jira issues
-			SearchResult hidden = client.getSearchClient().searchJql(jqlHiddenStr, 1000, 0).claim();
+			SearchResult hidden = client.getSearchClient().searchJql(jqlHiddenStr, 1000, 0, null).claim();
 
 			// remove hidden from list copy, before searching for resolved
 			hidden.getIssues().forEach((basicIssue) -> {
@@ -178,7 +178,7 @@ public class JiraEventList {
 			System.out.println(">>> jql resolved: ");
 			System.out.println(jqlResolvedStr);
 
-			SearchResult resolved = client.getSearchClient().searchJql(jqlResolvedStr, 1000, 0).claim();
+			SearchResult resolved = client.getSearchClient().searchJql(jqlResolvedStr, 1000, 0, null).claim();
 			resolved.getIssues().forEach((basicIssue) -> {
 				String key = basicIssue.getKey();
 				eventList.get(key).issueStatus = Status.RESOLVED;
